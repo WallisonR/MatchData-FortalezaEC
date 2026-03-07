@@ -1,26 +1,31 @@
 # Configuração do Neon (persistência de partidas)
 
-Este projeto suporta persistência de partidas via Neon.
+Este projeto persiste partidas no Neon através das rotas `/api/matches` e `/api/matches/sync`.
 
-## Opção recomendada (connection string)
-Defina na Vercel (Project Settings -> Environment Variables):
+## Variáveis de ambiente na Vercel
+Com a integração Neon -> Vercel, normalmente já são criadas automaticamente.
 
-- `NEON_DATABASE_URL` (ou `DATABASE_URL`)
+O backend aceita, nesta ordem:
 
-Exemplo de formato:
+1. `NEON_DATABASE_URL`
+2. `POSTGRES_URL`
+3. `POSTGRES_PRISMA_URL`
+4. `POSTGRES_URL_NON_POOLING`
+5. `DATABASE_URL`
 
-`postgresql://USER:PASSWORD@HOST/DB?sslmode=require&channel_binding=require`
+> Se você já conectou a integração Neon na Vercel, geralmente `POSTGRES_URL` já vem preenchida.
 
-## Opção alternativa (legado)
-Também funciona com:
+## Login fixo
+- e-mail: `admin@matchdata.com`
+- senha: `fec2026`
 
-- `NEON_SQL_ENDPOINT`
-- `NEON_SQL_API_KEY`
+(Se quiser trocar, use `APP_LOGIN_EMAIL` e `APP_LOGIN_PASSWORD`.)
 
 ## Funcionamento
-- `GET /api/matches` lê as partidas persistidas.
-- `PUT /api/matches/sync` salva a lista de partidas.
-- Tabela usada: `app_matches` (criada automaticamente pelo servidor).
+- `POST /api/login` autentica e grava cookie de sessão.
+- `GET /api/session` valida sessão.
+- `GET /api/matches` lê as partidas no Neon.
+- `PUT /api/matches/sync` salva as partidas no Neon.
 
 ## Fallback local (desenvolvimento)
-Se o Neon não estiver configurado, o servidor usa arquivo local `.data/matches.json`.
+Se nenhuma variável de banco estiver definida, usa `.data/matches.json` local.

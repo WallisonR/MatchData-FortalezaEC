@@ -51,7 +51,12 @@ function normalizeMatch(input: PersistedMatch): PersistedMatch {
 }
 
 const NEON_DATABASE_URL =
-  process.env.NEON_DATABASE_URL || process.env.DATABASE_URL || "";
+  process.env.NEON_DATABASE_URL ||
+  process.env.POSTGRES_URL ||
+  process.env.POSTGRES_PRISMA_URL ||
+  process.env.POSTGRES_URL_NON_POOLING ||
+  process.env.DATABASE_URL ||
+  "";
 const NEON_SQL_ENDPOINT = process.env.NEON_SQL_ENDPOINT || "";
 const NEON_SQL_API_KEY = process.env.NEON_SQL_API_KEY || "";
 

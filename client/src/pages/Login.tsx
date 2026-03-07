@@ -4,9 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocation } from "wouter";
 
-const FALLBACK_EMAIL = "admin@matchdata.com";
-const FALLBACK_PASSWORD = "fec2026";
-
 export default function Login() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
@@ -30,35 +27,14 @@ export default function Login() {
         body: JSON.stringify({ email: normalizedEmail, password: normalizedPassword }),
       });
 
-      if (response.ok) {
-        localStorage.setItem("md_client_auth", "1");
-        setLocation("/dashboard", { replace: true });
+      if (!response.ok) {
+        setError("Credenciais inválidas");
         return;
       }
 
-      // fallback para deploy estático sem backend de API
-      if (
-        normalizedEmail === FALLBACK_EMAIL &&
-        normalizedPassword === FALLBACK_PASSWORD
-      ) {
-        localStorage.setItem("md_client_auth", "1");
-        setLocation("/dashboard", { replace: true });
-        return;
-      }
-
-      throw new Error("Credenciais inválidas");
+      setLocation("/dashboard", { replace: true });
     } catch {
-      // fallback para indisponibilidade da API
-      if (
-        normalizedEmail === FALLBACK_EMAIL &&
-        normalizedPassword === FALLBACK_PASSWORD
-      ) {
-        localStorage.setItem("md_client_auth", "1");
-        setLocation("/dashboard", { replace: true });
-        return;
-      }
-
-      setError("Credenciais inválidas");
+      setError("Não foi possível conectar ao servidor de autenticação");
     } finally {
       setLoading(false);
     }
