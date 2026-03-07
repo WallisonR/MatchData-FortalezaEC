@@ -32,6 +32,9 @@ const KPI_DEFS: KpiDef[] = [
   { id: "finalizacoes", name: "Finalização/90min", metaG2: 12, metaG6: 12, group: "offensive", better: "higher" },
   { id: "pct_final_certa", name: "% Finalização Certa/90min", metaG2: 35, metaG6: 33, group: "offensive", better: "higher" },
   { id: "final_dentro", name: "Finalização de Dentro da área/90min", metaG2: 8, metaG6: 6.2, group: "offensive", better: "higher" },
+  { id: "pct_cruzamentos_acerto", name: "Cruzamentos % Acerto", metaG2: 34, metaG6: 35, group: "offensive", better: "higher" },
+  { id: "entradas_area_90", name: "Entradas da Área /90min", metaG2: 22, metaG6: 21, group: "offensive", better: "higher" },
+  { id: "toques_area_90", name: "Toques na Área /90min", metaG2: 15, metaG6: 15, group: "offensive", better: "higher" },
 
   // Defensive
   { id: "media_gols_sofridos", name: "Média de Gols Sofridos", metaG2: 0.88, metaG6: 0.92, group: "defensive", better: "lower" },
@@ -41,6 +44,9 @@ const KPI_DEFS: KpiDef[] = [
   { id: "final_sofrida", name: "Finalização Sofrida/90min", metaG2: 11, metaG6: 12, group: "defensive", better: "lower" },
   { id: "pct_final_certa_sofrida", name: "% Finalização CertaSofrida/90min", metaG2: 32, metaG6: 31, group: "defensive", better: "lower" },
   { id: "final_dentro_sofrida", name: "Finalização de Dentro da área Sofrida/90min", metaG2: 6, metaG6: 6, group: "defensive", better: "lower" },
+  { id: "pct_cruzamentos_acerto_sofridos", name: "Cruzamentos % Acerto Sofridos", metaG2: 31, metaG6: 34, group: "defensive", better: "lower" },
+  { id: "entradas_area_sofrida_90", name: "Entradas da Área Sofrida /90min", metaG2: 19, metaG6: 18, group: "defensive", better: "lower" },
+  { id: "toques_area_sofridos_90", name: "Toques na Área Sofridos /90min", metaG2: 12, metaG6: 13, group: "defensive", better: "lower" },
 ];
 
 type RoundKey = string; // e.g., 'fec_media', 'r1', 'r2'
