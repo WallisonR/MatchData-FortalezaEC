@@ -4,9 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocation } from "wouter";
 
+const FALLBACK_EMAIL = "admin@matchdata.com";
+const FALLBACK_PASSWORD = "fec2026";
+
 export default function Login() {
   const [, setLocation] = useLocation();
-  const [email, setEmail] = useState("admin@matchdata.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -16,21 +19,46 @@ export default function Login() {
     setLoading(true);
     setError(null);
 
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
+
     try {
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: normalizedEmail, password: normalizedPassword }),
       });
 
-      if (!response.ok) {
-        throw new Error("Credenciais inválidas");
+      if (response.ok) {
+        localStorage.setItem("md_client_auth", "1");
+        setLocation("/dashboard", { replace: true });
+        return;
       }
 
-      setLocation("/dashboard", { replace: true });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao realizar login");
+      // fallback para deploy estático sem backend de API
+      if (
+        normalizedEmail === FALLBACK_EMAIL &&
+        normalizedPassword === FALLBACK_PASSWORD
+      ) {
+        localStorage.setItem("md_client_auth", "1");
+        setLocation("/dashboard", { replace: true });
+        return;
+      }
+
+      throw new Error("Credenciais inválidas");
+    } catch {
+      // fallback para indisponibilidade da API
+      if (
+        normalizedEmail === FALLBACK_EMAIL &&
+        normalizedPassword === FALLBACK_PASSWORD
+      ) {
+        localStorage.setItem("md_client_auth", "1");
+        setLocation("/dashboard", { replace: true });
+        return;
+      }
+
+      setError("Credenciais inválidas");
     } finally {
       setLoading(false);
     }
@@ -43,9 +71,6 @@ export default function Login() {
           <CardTitle>Login MatchData</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-xs text-muted-foreground mb-3">
-            Use: admin@matchdata.com / fec2026
-          </p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">E-mail</label>

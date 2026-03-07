@@ -20,6 +20,11 @@ function RootRedirect() {
   return null;
 }
 
+function hasClientAuth() {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("md_client_auth") === "1";
+}
+
 function RequireLogin({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
   const [checked, setChecked] = useState(false);
@@ -29,10 +34,14 @@ function RequireLogin({ children }: { children: React.ReactNode }) {
     const verify = async () => {
       try {
         const response = await fetch("/api/session", { credentials: "include" });
-        const data = await response.json();
-        setAuthenticated(Boolean(data?.authenticated));
+        if (response.ok) {
+          const data = await response.json();
+          setAuthenticated(Boolean(data?.authenticated) || hasClientAuth());
+        } else {
+          setAuthenticated(hasClientAuth());
+        }
       } catch {
-        setAuthenticated(false);
+        setAuthenticated(hasClientAuth());
       } finally {
         setChecked(true);
       }
