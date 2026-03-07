@@ -50,30 +50,67 @@ function normalizeMatch(input: PersistedMatch): PersistedMatch {
   };
 }
 
-const NEON_SQL_ENDPOINT = process.env.NEON_SQL_ENDPOINT;
-const NEON_SQL_API_KEY = process.env.NEON_SQL_API_KEY;
+const NEON_DATABASE_URL =
+  process.env.NEON_DATABASE_URL || process.env.DATABASE_URL || "";
+const NEON_SQL_ENDPOINT = process.env.NEON_SQL_ENDPOINT || "";
+const NEON_SQL_API_KEY = process.env.NEON_SQL_API_KEY || "";
+
+function getNeonFetchEndpointFromUrl(connectionString: string) {
+  try {
+    const url = new URL(connectionString);
+    return `https://${url.host}/sql`;
+  } catch {
+    return null;
+  }
+}
 
 async function neonQuery<T = any>(query: string, params: unknown[] = []): Promise<T[]> {
-  if (!NEON_SQL_ENDPOINT || !NEON_SQL_API_KEY) {
-    throw new Error("Neon SQL endpoint not configured");
+  // Preferred mode: direct Neon connection string (what you provided)
+  if (NEON_DATABASE_URL) {
+    const endpoint = getNeonFetchEndpointFromUrl(NEON_DATABASE_URL);
+    if (!endpoint) {
+      throw new Error("Invalid NEON_DATABASE_URL/DATABASE_URL");
+    }
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Neon-Connection-String": NEON_DATABASE_URL,
+      },
+      body: JSON.stringify({ query, params }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Neon SQL request failed: ${response.status} ${text}`);
+    }
+
+    const payload = (await response.json()) as any;
+    return payload.rows ?? payload.result?.rows ?? payload.data?.rows ?? [];
   }
 
-  const response = await fetch(NEON_SQL_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${NEON_SQL_API_KEY}`,
-    },
-    body: JSON.stringify({ query, params }),
-  });
+  // Backward compatibility mode: SQL endpoint + API key
+  if (NEON_SQL_ENDPOINT && NEON_SQL_API_KEY) {
+    const response = await fetch(NEON_SQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${NEON_SQL_API_KEY}`,
+      },
+      body: JSON.stringify({ query, params }),
+    });
 
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Neon SQL request failed: ${response.status} ${text}`);
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Neon SQL request failed: ${response.status} ${text}`);
+    }
+
+    const payload = (await response.json()) as any;
+    return payload.rows ?? payload.result?.rows ?? payload.data?.rows ?? [];
   }
 
-  const payload = await response.json() as any;
-  return payload.rows ?? payload.result?.rows ?? payload.data?.rows ?? [];
+  throw new Error("Neon not configured");
 }
 
 let neonReady = false;
@@ -90,8 +127,12 @@ async function ensureNeonTable() {
   neonReady = true;
 }
 
+function neonEnabled() {
+  return Boolean(NEON_DATABASE_URL || (NEON_SQL_ENDPOINT && NEON_SQL_API_KEY));
+}
+
 export async function listPersistedMatches(): Promise<PersistedMatch[]> {
-  if (NEON_SQL_ENDPOINT && NEON_SQL_API_KEY) {
+  if (neonEnabled()) {
     await ensureNeonTable();
     const rows = await neonQuery<{ payload: PersistedMatch }>(
       "SELECT payload FROM app_matches ORDER BY id DESC"
@@ -112,7 +153,7 @@ export async function listPersistedMatches(): Promise<PersistedMatch[]> {
 export async function savePersistedMatches(matches: PersistedMatch[]): Promise<void> {
   const normalized = matches.map(normalizeMatch);
 
-  if (NEON_SQL_ENDPOINT && NEON_SQL_API_KEY) {
+  if (neonEnabled()) {
     await ensureNeonTable();
     await neonQuery("BEGIN");
     try {

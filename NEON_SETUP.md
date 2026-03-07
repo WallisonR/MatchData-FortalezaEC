@@ -1,12 +1,21 @@
 # Configuração do Neon (persistência de partidas)
 
-Este projeto suporta persistência de partidas via Neon SQL HTTP.
+Este projeto suporta persistência de partidas via Neon.
 
-## Variáveis de ambiente
+## Opção recomendada (connection string)
 Defina na Vercel (Project Settings -> Environment Variables):
 
-- `NEON_SQL_ENDPOINT`: endpoint HTTP do Neon SQL API
-- `NEON_SQL_API_KEY`: API key do Neon com permissão de leitura/escrita
+- `NEON_DATABASE_URL` (ou `DATABASE_URL`)
+
+Exemplo de formato:
+
+`postgresql://USER:PASSWORD@HOST/DB?sslmode=require&channel_binding=require`
+
+## Opção alternativa (legado)
+Também funciona com:
+
+- `NEON_SQL_ENDPOINT`
+- `NEON_SQL_API_KEY`
 
 ## Funcionamento
 - `GET /api/matches` lê as partidas persistidas.
@@ -14,4 +23,4 @@ Defina na Vercel (Project Settings -> Environment Variables):
 - Tabela usada: `app_matches` (criada automaticamente pelo servidor).
 
 ## Fallback local (desenvolvimento)
-Se as variáveis do Neon não estiverem definidas, o servidor usa arquivo local `.data/matches.json`.
+Se o Neon não estiver configurado, o servidor usa arquivo local `.data/matches.json`.
