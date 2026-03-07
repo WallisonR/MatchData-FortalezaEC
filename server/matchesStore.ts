@@ -50,12 +50,28 @@ function normalizeMatch(input: PersistedMatch): PersistedMatch {
   };
 }
 
+function buildUrlFromPgParams() {
+  const host = process.env.PGHOST || process.env.POSTGRES_HOST;
+  const database = process.env.PGDATABASE || process.env.POSTGRES_DATABASE;
+  const user = process.env.PGUSER || process.env.POSTGRES_USER;
+  const password = process.env.PGPASSWORD || process.env.POSTGRES_PASSWORD;
+
+  if (!host || !database || !user || !password) return "";
+
+  const encodedUser = encodeURIComponent(user);
+  const encodedPassword = encodeURIComponent(password);
+  return `postgresql://${encodedUser}:${encodedPassword}@${host}/${database}?sslmode=require`;
+}
+
 const NEON_DATABASE_URL =
   process.env.NEON_DATABASE_URL ||
+  process.env.DATABASE_URL ||
+  process.env.DATABASE_URL_UNPOOLED ||
   process.env.POSTGRES_URL ||
   process.env.POSTGRES_PRISMA_URL ||
   process.env.POSTGRES_URL_NON_POOLING ||
-  process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL_NO_SSL ||
+  buildUrlFromPgParams() ||
   "";
 const NEON_SQL_ENDPOINT = process.env.NEON_SQL_ENDPOINT || "";
 const NEON_SQL_API_KEY = process.env.NEON_SQL_API_KEY || "";

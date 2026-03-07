@@ -5,15 +5,18 @@ Este projeto persiste partidas no Neon através das rotas `/api/matches` e `/api
 ## Variáveis de ambiente na Vercel
 Com a integração Neon -> Vercel, normalmente já são criadas automaticamente.
 
-O backend aceita, nesta ordem:
+O backend aceita (em ordem):
 
 1. `NEON_DATABASE_URL`
-2. `POSTGRES_URL`
-3. `POSTGRES_PRISMA_URL`
-4. `POSTGRES_URL_NON_POOLING`
-5. `DATABASE_URL`
+2. `DATABASE_URL`
+3. `DATABASE_URL_UNPOOLED`
+4. `POSTGRES_URL`
+5. `POSTGRES_PRISMA_URL`
+6. `POSTGRES_URL_NON_POOLING`
+7. `POSTGRES_URL_NO_SSL`
+8. montagem via parâmetros (`PGHOST`/`PGDATABASE`/`PGUSER`/`PGPASSWORD`) ou (`POSTGRES_HOST`/`POSTGRES_DATABASE`/`POSTGRES_USER`/`POSTGRES_PASSWORD`)
 
-> Se você já conectou a integração Neon na Vercel, geralmente `POSTGRES_URL` já vem preenchida.
+> Se você já conectou a integração Neon na Vercel, `POSTGRES_URL` e similares geralmente já vêm preenchidas.
 
 ## Login fixo
 - e-mail: `admin@matchdata.com`
