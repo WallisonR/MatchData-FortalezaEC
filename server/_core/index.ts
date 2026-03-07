@@ -11,8 +11,8 @@ import { serveStatic, setupVite } from "./vite";
 import { listPersistedMatches, savePersistedMatches } from "../matchesStore";
 
 const SIMPLE_AUTH_COOKIE = "md_auth";
-const LOGIN_EMAIL = (process.env.APP_LOGIN_EMAIL || "admin@matchdata.com").trim().toLowerCase();
-const LOGIN_PASSWORD = (process.env.APP_LOGIN_PASSWORD || "fec2026").trim();
+const LOGIN_EMAIL = "admin@matchdata.com";
+const LOGIN_PASSWORD = "fec2026";
 const sessions = new Set<string>();
 
 function getCookieValue(rawCookie: string | undefined, name: string) {

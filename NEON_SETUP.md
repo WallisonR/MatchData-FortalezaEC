@@ -22,7 +22,6 @@ O backend aceita (em ordem):
 - e-mail: `admin@matchdata.com`
 - senha: `fec2026`
 
-(Se quiser trocar, use `APP_LOGIN_EMAIL` e `APP_LOGIN_PASSWORD`.)
 
 ## Funcionamento
 - `POST /api/login` autentica e grava cookie de sessão.

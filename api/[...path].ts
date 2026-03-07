@@ -1,8 +1,8 @@
 import { listPersistedMatches, savePersistedMatches } from "../server/matchesStore";
 
 const COOKIE_NAME = "md_auth";
-const LOGIN_EMAIL = (process.env.APP_LOGIN_EMAIL || "admin@matchdata.com").trim().toLowerCase();
-const LOGIN_PASSWORD = (process.env.APP_LOGIN_PASSWORD || "fec2026").trim();
+const LOGIN_EMAIL = "admin@matchdata.com";
+const LOGIN_PASSWORD = "fec2026";
 
 function getCookieValue(rawCookie: string | undefined, name: string) {
   if (!rawCookie) return null;
@@ -18,6 +18,20 @@ function isAuthenticated(req: any) {
   return getCookieValue(req.headers.cookie, COOKIE_NAME) === "1";
 }
 
+
+function parseBody(req: any) {
+  const body = req.body;
+  if (!body) return {};
+  if (typeof body === "string") {
+    try {
+      return JSON.parse(body);
+    } catch {
+      return {};
+    }
+  }
+  return body;
+}
+
 function requireAuth(req: any, res: any) {
   if (!isAuthenticated(req)) {
     res.status(401).json({ message: "Unauthorized" });
@@ -30,8 +44,9 @@ export default async function handler(req: any, res: any) {
   const path = `/${(req.query.path ?? []).toString().replace(/,/g, "/")}`;
 
   if (req.method === "POST" && path === "/login") {
-    const normalizedEmail = String(req.body?.email ?? "").trim().toLowerCase();
-    const normalizedPassword = String(req.body?.password ?? "").trim();
+    const body = parseBody(req);
+    const normalizedEmail = String(body?.email ?? "").trim().toLowerCase();
+    const normalizedPassword = String(body?.password ?? "").trim();
 
     if (normalizedEmail !== LOGIN_EMAIL || normalizedPassword !== LOGIN_PASSWORD) {
       res.status(401).json({ success: false, message: "Credenciais inválidas" });
@@ -71,7 +86,8 @@ export default async function handler(req: any, res: any) {
   if (req.method === "PUT" && path === "/matches/sync") {
     if (!requireAuth(req, res)) return;
     try {
-      const matches = Array.isArray(req.body?.matches) ? req.body.matches : [];
+      const body = parseBody(req);
+      const matches = Array.isArray(body?.matches) ? body.matches : [];
       await savePersistedMatches(matches);
       res.status(200).json({ success: true });
     } catch {
