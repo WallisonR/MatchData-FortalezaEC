@@ -41,7 +41,22 @@ function requireAuth(req: any, res: any) {
 }
 
 export default async function handler(req: any, res: any) {
-  const path = `/${(req.query.path ?? []).toString().replace(/,/g, "/")}`;
+  const queryPath = req.query?.path;
+  const pathSegments = Array.isArray(queryPath)
+    ? queryPath
+    : typeof queryPath === "string"
+      ? [queryPath]
+      : [];
+
+  const fallbackFromUrl =
+    typeof req.url === "string"
+      ? req.url.split("?")[0].replace(/^\/api\/?/, "")
+      : "";
+
+  const rawPath =
+    pathSegments.length > 0 ? pathSegments.join("/") : fallbackFromUrl;
+
+  const path = `/${rawPath.replace(/^\/+/, "")}`;
 
   if (req.method === "POST" && path === "/login") {
     const body = parseBody(req);
