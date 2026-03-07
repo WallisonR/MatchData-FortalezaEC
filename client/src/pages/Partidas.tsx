@@ -477,12 +477,12 @@ export default function Partidas() {
               Nova Partida
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="w-[95vw] max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle>{editingId ? "Editar Partida" : "Registrar Nova Partida"}</DialogTitle>
               <DialogDescription>Preencha os dados da partida</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 pb-2">
               <div>
                 <Label>Data</Label>
                 <Input
@@ -491,7 +491,7 @@ export default function Partidas() {
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Adversário</Label>
                   <Input
@@ -534,7 +534,7 @@ export default function Partidas() {
                   <div className="text-sm text-gray-600 mt-1">Se nenhuma rodada for selecionada, uma nova rodada será criada ao salvar.</div>
                 </div>
               )}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <Label>Resultado</Label>
                   <Select value={formData.result} onValueChange={(value) => setFormData({ ...formData, result: value })}>
@@ -567,7 +567,7 @@ export default function Partidas() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Posse de Bola (%)</Label>
                   <Input
@@ -581,7 +581,7 @@ export default function Partidas() {
               </div>
               <div className="mt-4">
                 <div className="text-sm font-semibold text-gray-700 mb-2">Estatísticas da Partida</div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     <Label>Finalizações</Label>
                     <Input type="number" value={formData.shots} onChange={(e) => setFormData({ ...formData, shots: e.target.value })} placeholder="0" />
@@ -596,7 +596,7 @@ export default function Partidas() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 mt-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
                   <div>
                     <Label>% Acerto de Passes</Label>
                     <Input type="number" value={formData.passAccuracy} onChange={(e) => setFormData({ ...formData, passAccuracy: e.target.value })} placeholder="84" />
@@ -612,7 +612,7 @@ export default function Partidas() {
                 </div>
 
                 <div className="text-sm font-semibold text-gray-700 mb-2 mt-4">KPIs adicionais (preencha se souber)</div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     <Label>XG</Label>
                     <Input type="number" value={formData.xg} onChange={(e) => setFormData({ ...formData, xg: e.target.value })} placeholder="1.23" step="0.01" />
@@ -627,7 +627,7 @@ export default function Partidas() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 mt-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
                   <div>
                     <Label>Finalizações dentro da área</Label>
                     <Input type="number" value={formData.final_dentro} onChange={(e) => setFormData({ ...formData, final_dentro: e.target.value })} placeholder="8" />
@@ -642,7 +642,7 @@ export default function Partidas() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 mt-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
                   <div>
                     <Label>% Não sofreu gols (0/1)</Label>
                     <Input type="number" value={formData.pct_nao_sofreu} onChange={(e) => setFormData({ ...formData, pct_nao_sofreu: e.target.value })} placeholder="1" />
@@ -798,7 +798,7 @@ export default function Partidas() {
           </DialogHeader>
           {stats && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center">
@@ -817,7 +817,7 @@ export default function Partidas() {
                 </Card>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm font-semibold text-gray-700 mb-2">Finalizações</div>
                   <div className="space-y-1 text-sm">
