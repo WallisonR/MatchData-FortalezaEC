@@ -161,10 +161,12 @@ function shouldAllowLocalFallback() {
 export async function listPersistedMatches(): Promise<PersistedMatch[]> {
   if (neonEnabled()) {
     await ensureNeonTable();
-    const rows = await neonQuery<{ payload: PersistedMatch }>(
+    const rows = await neonQuery<{ payload?: PersistedMatch }>(
       "SELECT payload FROM app_matches ORDER BY id DESC"
     );
-    return rows.map((r) => normalizeMatch(r.payload));
+    return rows
+      .filter((r): r is { payload: PersistedMatch } => Boolean(r && r.payload))
+      .map((r) => normalizeMatch(r.payload));
   }
 
   if (!shouldAllowLocalFallback()) {

@@ -1,8 +1,12 @@
-import { listPersistedMatches, savePersistedMatches } from "../server/matchesStore";
-
 const COOKIE_NAME = "md_auth";
 const LOGIN_EMAIL = "admin@matchdata.com";
 const LOGIN_PASSWORD = "fec2026";
+
+export const config = { runtime: "nodejs" };
+
+async function getMatchesStore() {
+  return import("../server/matchesStore");
+}
 
 function getCookieValue(rawCookie: string | undefined, name: string) {
   if (!rawCookie) return null;
@@ -90,6 +94,7 @@ export default async function handler(req: any, res: any) {
   if (req.method === "GET" && path === "/matches") {
     if (!requireAuth(req, res)) return;
     try {
+      const { listPersistedMatches } = await getMatchesStore();
       const matches = await listPersistedMatches();
       res.status(200).json({ matches });
     } catch {
@@ -103,6 +108,7 @@ export default async function handler(req: any, res: any) {
     try {
       const body = parseBody(req);
       const matches = Array.isArray(body?.matches) ? body.matches : [];
+      const { savePersistedMatches } = await getMatchesStore();
       await savePersistedMatches(matches);
       res.status(200).json({ success: true });
     } catch {
