@@ -1,7 +1,5 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Loader2, Moon, Sun } from "lucide-react";
-import { Streamdown } from 'streamdown';
 import { useLocation } from "wouter";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -12,10 +10,6 @@ import { useTheme } from "@/contexts/ThemeContext";
 export default function Home() {
   const [, setLocation] = useLocation();
   const { theme, toggleTheme } = useTheme();
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
-
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="min-h-screen flex flex-col p-8 bg-background text-foreground">
@@ -52,7 +46,7 @@ export default function Home() {
         <div className="bg-card rounded-lg shadow-lg p-8 border-l-4 border-l-primary">
           <h2 className="text-2xl font-bold text-foreground mb-4">Bem-vindo ao MatchData</h2>
           <p className="text-muted-foreground mb-6">
-            Sistema completo de gestão de dados de desempenho do Fortaleza Esporte Clube. 
+            Sistema completo de gestão de dados de desempenho do Fortaleza Esporte Clube.
             Acompanhe KPIs, registre partidas e analise estatísticas detalhadas.
           </p>
           <Button
@@ -64,30 +58,12 @@ export default function Home() {
           </Button>
         </div>
 
-        {/* Auth Info */}
-        <div className="p-4 bg-card rounded-lg border border-border">
-          <h2 className="font-semibold text-foreground mb-2">Status de Autenticação</h2>
-          <p className="text-sm text-muted-foreground">
-            Autenticado: <span className="font-mono font-semibold">{isAuthenticated ? 'Sim' : 'Não'}</span>
-          </p>
-          {loading && <p className="text-sm text-primary mt-1">Carregando autenticação...</p>}
-          {error && <p className="text-sm text-secondary mt-1">Erro: {error.message}</p>}
-          {user && <p className="text-sm text-muted-foreground mt-1">Usuário: {user.email}</p>}
-        </div>
-
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-card rounded-lg shadow p-6 border-t-4 border-t-primary">
             <h3 className="font-bold text-lg text-foreground mb-2">📊 Dashboard KPIs</h3>
             <p className="text-sm text-muted-foreground">
               Acompanhe métricas ofensivas, defensivas e gerais com metas G2 e G6.
-            </p>
-          </div>
-
-          <div className="bg-card rounded-lg shadow p-6 border-t-4 border-t-secondary">
-            <h3 className="font-bold text-lg text-foreground mb-2">👥 Elenco (em breve)</h3>
-            <p className="text-sm text-muted-foreground">
-              Funcionalidade de gestão de elenco será adicionada quando necessário.
             </p>
           </div>
 
@@ -97,12 +73,6 @@ export default function Home() {
               Registre e analise estatísticas detalhadas de cada partida.
             </p>
           </div>
-        </div>
-
-        {/* Example: Markdown rendering */}
-        <div className="p-4 bg-card rounded-lg border border-border">
-          <h3 className="font-semibold text-foreground mb-2">Exemplo de Conteúdo</h3>
-          <Streamdown>### MatchData v1.0\n\nSistema de análise **completo** e *inteligente* para o Fortaleza Esporte Clube.</Streamdown>
         </div>
 
         {/* Loading indicator */}
