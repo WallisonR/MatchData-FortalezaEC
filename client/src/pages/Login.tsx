@@ -43,6 +43,9 @@ export default function Login() {
           <CardTitle>Login MatchData</CardTitle>
         </CardHeader>
         <CardContent>
+          <p className="text-xs text-muted-foreground mb-3">
+            Use: admin@matchdata.com / fec2026
+          </p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">E-mail</label>

@@ -11,8 +11,8 @@ import { serveStatic, setupVite } from "./vite";
 import { listPersistedMatches, savePersistedMatches } from "../matchesStore";
 
 const SIMPLE_AUTH_COOKIE = "md_auth";
-const LOGIN_EMAIL = "admin@matchdata.com";
-const LOGIN_PASSWORD = "fec2026";
+const LOGIN_EMAIL = (process.env.APP_LOGIN_EMAIL || "admin@matchdata.com").trim().toLowerCase();
+const LOGIN_PASSWORD = (process.env.APP_LOGIN_PASSWORD || "fec2026").trim();
 const sessions = new Set<string>();
 
 function getCookieValue(rawCookie: string | undefined, name: string) {
@@ -70,7 +70,10 @@ async function startServer() {
 
   app.post("/api/login", (req, res) => {
     const { email, password } = req.body ?? {};
-    if (email !== LOGIN_EMAIL || password !== LOGIN_PASSWORD) {
+    const normalizedEmail = String(email ?? "").trim().toLowerCase();
+    const normalizedPassword = String(password ?? "").trim();
+
+    if (normalizedEmail !== LOGIN_EMAIL || normalizedPassword !== LOGIN_PASSWORD) {
       res.status(401).json({ success: false, message: "Credenciais inválidas" });
       return;
     }
