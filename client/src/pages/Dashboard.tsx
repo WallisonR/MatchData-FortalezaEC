@@ -151,16 +151,16 @@ const getStatusColor = (
 
   // quando MAIOR é melhor
   if (better === "higher") {
-    if (value >= metaG2) return "bg-green-200 border-green-400";
-    if (value >= metaG6) return "bg-yellow-200 border-yellow-400";
-    return "bg-yellow-100 border-yellow-300";
+    if (value >= metaG2) return "bg-green-200 border-green-400 text-green-950 dark:bg-emerald-300 dark:border-emerald-500 dark:text-emerald-950";
+    if (value >= metaG6) return "bg-yellow-200 border-yellow-400 text-yellow-950 dark:bg-amber-300 dark:border-amber-500 dark:text-amber-950";
+    return "bg-yellow-100 border-yellow-300 text-yellow-950 dark:bg-amber-200 dark:border-amber-400 dark:text-amber-950";
   }
 
   // quando MENOR é melhor
   if (better === "lower") {
-    if (value <= metaG2) return "bg-green-200 border-green-400";
-    if (value <= metaG6) return "bg-yellow-200 border-yellow-400";
-    return "bg-yellow-100 border-yellow-300";
+    if (value <= metaG2) return "bg-green-200 border-green-400 text-green-950 dark:bg-emerald-300 dark:border-emerald-500 dark:text-emerald-950";
+    if (value <= metaG6) return "bg-yellow-200 border-yellow-400 text-yellow-950 dark:bg-amber-300 dark:border-amber-500 dark:text-amber-950";
+    return "bg-yellow-100 border-yellow-300 text-yellow-950 dark:bg-amber-200 dark:border-amber-400 dark:text-amber-950";
   }
 
 };
