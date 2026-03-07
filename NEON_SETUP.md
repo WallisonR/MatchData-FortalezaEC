@@ -32,3 +32,9 @@ O backend aceita (em ordem):
 
 ## Fallback local (desenvolvimento)
 Se nenhuma variável de banco estiver definida, usa `.data/matches.json` local.
+
+## Importante para produção
+Em `production`/Vercel, se não houver variável de banco válida, a API retorna erro (não usa fallback local), para evitar perda silenciosa de dados entre navegadores/dias.
+
+Se quiser forçar fallback local apenas para testes fora de produção, use:
+- `FORCE_LOCAL_MATCH_STORE=1`

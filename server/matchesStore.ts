@@ -152,6 +152,12 @@ function neonEnabled() {
   return Boolean(NEON_DATABASE_URL || (NEON_SQL_ENDPOINT && NEON_SQL_API_KEY));
 }
 
+
+function shouldAllowLocalFallback() {
+  if (process.env.FORCE_LOCAL_MATCH_STORE === "1") return true;
+  return process.env.NODE_ENV !== "production" && process.env.VERCEL !== "1";
+}
+
 export async function listPersistedMatches(): Promise<PersistedMatch[]> {
   if (neonEnabled()) {
     await ensureNeonTable();
@@ -159,6 +165,10 @@ export async function listPersistedMatches(): Promise<PersistedMatch[]> {
       "SELECT payload FROM app_matches ORDER BY id DESC"
     );
     return rows.map((r) => normalizeMatch(r.payload));
+  }
+
+  if (!shouldAllowLocalFallback()) {
+    throw new Error("Neon database is not configured in this environment");
   }
 
   try {
@@ -191,6 +201,10 @@ export async function savePersistedMatches(matches: PersistedMatch[]): Promise<v
       throw error;
     }
     return;
+  }
+
+  if (!shouldAllowLocalFallback()) {
+    throw new Error("Neon database is not configured in this environment");
   }
 
   ensureLocalDir();
