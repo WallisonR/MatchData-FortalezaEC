@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -131,6 +131,34 @@ export default function Partidas() {
     selectedRound: "new",
   });
 
+
+  const syncMatchesToServer = async (nextMatches: Match[]) => {
+    await fetch("/api/matches/sync", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ matches: nextMatches }),
+    });
+  };
+
+  useEffect(() => {
+    const loadMatches = async () => {
+      try {
+        const response = await fetch("/api/matches", { credentials: "include" });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (Array.isArray(data?.matches)) {
+          setMatches(data.matches);
+          localStorage.setItem("matches", JSON.stringify(data.matches));
+        }
+      } catch {
+        // keep local data fallback
+      }
+    };
+
+    loadMatches();
+  }, []);
+
   const handleAddClick = () => {
     setEditingId(null);
     setFormData({
@@ -212,7 +240,7 @@ export default function Partidas() {
     setOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.opponent || !formData.date) {
       alert("Preencha os dados obrigatórios");
       return;
@@ -391,6 +419,7 @@ export default function Partidas() {
     // persist matches list
     try {
       localStorage.setItem("matches", JSON.stringify(toPersistMatches));
+      await syncMatchesToServer(toPersistMatches);
     } catch {}
 
     setOpen(false);
@@ -400,6 +429,10 @@ export default function Partidas() {
     if (confirm("Tem certeza que deseja deletar esta partida?")) {
       const remaining = matches.filter((m) => m.id !== id);
       setMatches(remaining);
+      try {
+        localStorage.setItem("matches", JSON.stringify(remaining));
+        void syncMatchesToServer(remaining);
+      } catch {}
       // remove round mapping and values
       try {
         const roundMap = JSON.parse(localStorage.getItem("match_round_map") || "{}");

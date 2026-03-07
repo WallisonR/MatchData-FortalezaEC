@@ -1,12 +1,13 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import DashboardLayout from "./components/DashboardLayout";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login";
 import Partidas from "./pages/Partidas";
 
 function RootRedirect() {
@@ -19,36 +20,68 @@ function RootRedirect() {
   return null;
 }
 
+function RequireLogin({ children }: { children: React.ReactNode }) {
+  const [, setLocation] = useLocation();
+  const [checked, setChecked] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const verify = async () => {
+      try {
+        const response = await fetch("/api/session", { credentials: "include" });
+        const data = await response.json();
+        setAuthenticated(Boolean(data?.authenticated));
+      } catch {
+        setAuthenticated(false);
+      } finally {
+        setChecked(true);
+      }
+    };
+
+    verify();
+  }, []);
+
+  useEffect(() => {
+    if (!checked) return;
+    if (!authenticated) {
+      setLocation("/login", { replace: true });
+    }
+  }, [authenticated, checked, setLocation]);
+
+  if (!checked) return null;
+  if (!authenticated) return null;
+
+  return <>{children}</>;
+}
+
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={RootRedirect} />
+      <Route path={"/login"} component={Login} />
       <Route path={"/dashboard"}>
         {() => (
-          <DashboardLayout>
-            <Dashboard />
-          </DashboardLayout>
+          <RequireLogin>
+            <DashboardLayout>
+              <Dashboard />
+            </DashboardLayout>
+          </RequireLogin>
         )}
       </Route>
       <Route path={"/partidas"}>
         {() => (
-          <DashboardLayout>
-            <Partidas />
-          </DashboardLayout>
+          <RequireLogin>
+            <DashboardLayout>
+              <Partidas />
+            </DashboardLayout>
+          </RequireLogin>
         )}
       </Route>
       <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>
   );
 }
-
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
 
 function App() {
   return (
