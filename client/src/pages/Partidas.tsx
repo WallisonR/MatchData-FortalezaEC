@@ -37,11 +37,17 @@ interface Match {
   finalizacoes?: number;
   pct_final_certa?: number;
   final_dentro?: number;
+  pct_cruzamentos_acerto?: number;
+  entradas_area_90?: number;
+  toques_area_90?: number;
   xg_contra?: number;
   pct_nao_sofreu?: number;
   final_sofrida?: number;
   pct_final_certa_sofrida?: number;
   final_dentro_sofrida?: number;
+  pct_cruzamentos_acerto_sofridos?: number;
+  entradas_area_sofrida_90?: number;
+  toques_area_sofridos_90?: number;
   shots?: number;
   shotsOnTarget?: number;
   passes?: number;
@@ -105,11 +111,17 @@ export default function Partidas() {
     finalizacoes: "",
     pct_final_certa: "",
     final_dentro: "",
+    pct_cruzamentos_acerto: "",
+    entradas_area_90: "",
+    toques_area_90: "",
     xg_contra: "",
     pct_nao_sofreu: "",
     final_sofrida: "",
     pct_final_certa_sofrida: "",
     final_dentro_sofrida: "",
+    pct_cruzamentos_acerto_sofridos: "",
+    entradas_area_sofrida_90: "",
+    toques_area_sofridos_90: "",
     shots: "",
     shotsOnTarget: "",
     passes: "",
@@ -134,11 +146,17 @@ export default function Partidas() {
       finalizacoes: "",
       pct_final_certa: "",
       final_dentro: "",
+      pct_cruzamentos_acerto: "",
+      entradas_area_90: "",
+      toques_area_90: "",
       xg_contra: "",
       pct_nao_sofreu: "",
       final_sofrida: "",
       pct_final_certa_sofrida: "",
       final_dentro_sofrida: "",
+      pct_cruzamentos_acerto_sofridos: "",
+      entradas_area_sofrida_90: "",
+      toques_area_sofridos_90: "",
       shots: "",
       shotsOnTarget: "",
       passes: "",
@@ -173,11 +191,17 @@ export default function Partidas() {
       finalizacoes: match.finalizacoes == null ? "" : String(match.finalizacoes),
       pct_final_certa: match.pct_final_certa == null ? "" : String(match.pct_final_certa),
       final_dentro: match.final_dentro == null ? "" : String(match.final_dentro),
+      pct_cruzamentos_acerto: match.pct_cruzamentos_acerto == null ? "" : String(match.pct_cruzamentos_acerto),
+      entradas_area_90: match.entradas_area_90 == null ? "" : String(match.entradas_area_90),
+      toques_area_90: match.toques_area_90 == null ? "" : String(match.toques_area_90),
       xg_contra: match.xg_contra == null ? "" : String(match.xg_contra),
       pct_nao_sofreu: match.pct_nao_sofreu == null ? "" : String(match.pct_nao_sofreu),
       final_sofrida: match.final_sofrida == null ? "" : String(match.final_sofrida),
       pct_final_certa_sofrida: match.pct_final_certa_sofrida == null ? "" : String(match.pct_final_certa_sofrida),
       final_dentro_sofrida: match.final_dentro_sofrida == null ? "" : String(match.final_dentro_sofrida),
+      pct_cruzamentos_acerto_sofridos: match.pct_cruzamentos_acerto_sofridos == null ? "" : String(match.pct_cruzamentos_acerto_sofridos),
+      entradas_area_sofrida_90: match.entradas_area_sofrida_90 == null ? "" : String(match.entradas_area_sofrida_90),
+      toques_area_sofridos_90: match.toques_area_sofridos_90 == null ? "" : String(match.toques_area_sofridos_90),
       shots: match.shots == null ? "" : String(match.shots),
       shotsOnTarget: match.shotsOnTarget == null ? "" : String(match.shotsOnTarget),
       passes: match.passes == null ? "" : String(match.passes),
@@ -228,11 +252,17 @@ export default function Partidas() {
           finalizacoes: formData.finalizacoes === "" ? undefined : Number(formData.finalizacoes),
           pct_final_certa: formData.pct_final_certa === "" ? undefined : Number(formData.pct_final_certa),
           final_dentro: formData.final_dentro === "" ? undefined : Number(formData.final_dentro),
+          pct_cruzamentos_acerto: formData.pct_cruzamentos_acerto === "" ? undefined : Number(formData.pct_cruzamentos_acerto),
+          entradas_area_90: formData.entradas_area_90 === "" ? undefined : Number(formData.entradas_area_90),
+          toques_area_90: formData.toques_area_90 === "" ? undefined : Number(formData.toques_area_90),
           xg_contra: formData.xg_contra === "" ? undefined : Number(formData.xg_contra),
           pct_nao_sofreu: formData.pct_nao_sofreu === "" ? undefined : Number(formData.pct_nao_sofreu),
           final_sofrida: formData.final_sofrida === "" ? undefined : Number(formData.final_sofrida),
           pct_final_certa_sofrida: formData.pct_final_certa_sofrida === "" ? undefined : Number(formData.pct_final_certa_sofrida),
           final_dentro_sofrida: formData.final_dentro_sofrida === "" ? undefined : Number(formData.final_dentro_sofrida),
+          pct_cruzamentos_acerto_sofridos: formData.pct_cruzamentos_acerto_sofridos === "" ? undefined : Number(formData.pct_cruzamentos_acerto_sofridos),
+          entradas_area_sofrida_90: formData.entradas_area_sofrida_90 === "" ? undefined : Number(formData.entradas_area_sofrida_90),
+          toques_area_sofridos_90: formData.toques_area_sofridos_90 === "" ? undefined : Number(formData.toques_area_sofridos_90),
           shots: formData.shots === "" ? undefined : Number(formData.shots),
           shotsOnTarget: formData.shotsOnTarget === "" ? undefined : Number(formData.shotsOnTarget),
           passes: formData.passes === "" ? undefined : Number(formData.passes),
@@ -292,11 +322,17 @@ export default function Partidas() {
         finalizacoes: formData.finalizacoes === "" ? undefined : Number(formData.finalizacoes),
         pct_final_certa: formData.pct_final_certa === "" ? undefined : Number(formData.pct_final_certa),
         final_dentro: formData.final_dentro === "" ? undefined : Number(formData.final_dentro),
+        pct_cruzamentos_acerto: formData.pct_cruzamentos_acerto === "" ? undefined : Number(formData.pct_cruzamentos_acerto),
+        entradas_area_90: formData.entradas_area_90 === "" ? undefined : Number(formData.entradas_area_90),
+        toques_area_90: formData.toques_area_90 === "" ? undefined : Number(formData.toques_area_90),
         xg_contra: formData.xg_contra === "" ? undefined : Number(formData.xg_contra),
         pct_nao_sofreu: formData.pct_nao_sofreu === "" ? undefined : Number(formData.pct_nao_sofreu),
         final_sofrida: formData.final_sofrida === "" ? undefined : Number(formData.final_sofrida),
         pct_final_certa_sofrida: formData.pct_final_certa_sofrida === "" ? undefined : Number(formData.pct_final_certa_sofrida),
         final_dentro_sofrida: formData.final_dentro_sofrida === "" ? undefined : Number(formData.final_dentro_sofrida),
+        pct_cruzamentos_acerto_sofridos: formData.pct_cruzamentos_acerto_sofridos === "" ? undefined : Number(formData.pct_cruzamentos_acerto_sofridos),
+        entradas_area_sofrida_90: formData.entradas_area_sofrida_90 === "" ? undefined : Number(formData.entradas_area_sofrida_90),
+        toques_area_sofridos_90: formData.toques_area_sofridos_90 === "" ? undefined : Number(formData.toques_area_sofridos_90),
         shots: formData.shots === "" ? undefined : Number(formData.shots),
         shotsOnTarget: formData.shotsOnTarget === "" ? undefined : Number(formData.shotsOnTarget),
         passes: formData.passes === "" ? undefined : Number(formData.passes),
@@ -428,6 +464,9 @@ export default function Partidas() {
       maybeSet("finalizacoes", m.finalizacoes);
       maybeSet("pct_final_certa", m.pct_final_certa);
       maybeSet("final_dentro", m.final_dentro);
+      maybeSet("pct_cruzamentos_acerto", m.pct_cruzamentos_acerto);
+      maybeSet("entradas_area_90", m.entradas_area_90);
+      maybeSet("toques_area_90", m.toques_area_90);
 
       // defensive KPIs
       maybeSet("xg_contra", m.xg_contra);
@@ -435,6 +474,9 @@ export default function Partidas() {
       maybeSet("final_sofrida", m.final_sofrida);
       maybeSet("pct_final_certa_sofrida", m.pct_final_certa_sofrida);
       maybeSet("final_dentro_sofrida", m.final_dentro_sofrida);
+      maybeSet("pct_cruzamentos_acerto_sofridos", m.pct_cruzamentos_acerto_sofridos);
+      maybeSet("entradas_area_sofrida_90", m.entradas_area_sofrida_90);
+      maybeSet("toques_area_sofridos_90", m.toques_area_sofridos_90);
 
       localStorage.setItem("kpi_values", JSON.stringify(values));
       window.dispatchEvent(new Event("kpi-updated"));
@@ -477,12 +519,12 @@ export default function Partidas() {
               Nova Partida
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="w-[95vw] max-w-5xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader>
               <DialogTitle>{editingId ? "Editar Partida" : "Registrar Nova Partida"}</DialogTitle>
               <DialogDescription>Preencha os dados da partida</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 pb-2">
               <div>
                 <Label>Data</Label>
                 <Input
@@ -491,7 +533,7 @@ export default function Partidas() {
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Adversário</Label>
                   <Input
@@ -534,7 +576,7 @@ export default function Partidas() {
                   <div className="text-sm text-gray-600 mt-1">Se nenhuma rodada for selecionada, uma nova rodada será criada ao salvar.</div>
                 </div>
               )}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <Label>Resultado</Label>
                   <Select value={formData.result} onValueChange={(value) => setFormData({ ...formData, result: value })}>
@@ -567,7 +609,7 @@ export default function Partidas() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label>Posse de Bola (%)</Label>
                   <Input
@@ -581,7 +623,7 @@ export default function Partidas() {
               </div>
               <div className="mt-4">
                 <div className="text-sm font-semibold text-gray-700 mb-2">Estatísticas da Partida</div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     <Label>Finalizações</Label>
                     <Input type="number" value={formData.shots} onChange={(e) => setFormData({ ...formData, shots: e.target.value })} placeholder="0" />
@@ -596,7 +638,7 @@ export default function Partidas() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 mt-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
                   <div>
                     <Label>% Acerto de Passes</Label>
                     <Input type="number" value={formData.passAccuracy} onChange={(e) => setFormData({ ...formData, passAccuracy: e.target.value })} placeholder="84" />
@@ -612,7 +654,7 @@ export default function Partidas() {
                 </div>
 
                 <div className="text-sm font-semibold text-gray-700 mb-2 mt-4">KPIs adicionais (preencha se souber)</div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
                     <Label>XG</Label>
                     <Input type="number" value={formData.xg} onChange={(e) => setFormData({ ...formData, xg: e.target.value })} placeholder="1.23" step="0.01" />
@@ -627,7 +669,7 @@ export default function Partidas() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 mt-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
                   <div>
                     <Label>Finalizações dentro da área</Label>
                     <Input type="number" value={formData.final_dentro} onChange={(e) => setFormData({ ...formData, final_dentro: e.target.value })} placeholder="8" />
@@ -642,7 +684,7 @@ export default function Partidas() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 mt-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
                   <div>
                     <Label>% Não sofreu gols (0/1)</Label>
                     <Input type="number" value={formData.pct_nao_sofreu} onChange={(e) => setFormData({ ...formData, pct_nao_sofreu: e.target.value })} placeholder="1" />
@@ -654,6 +696,36 @@ export default function Partidas() {
                   <div>
                     <Label>Finalizações dentro sofridas</Label>
                     <Input type="number" value={formData.final_dentro_sofrida} onChange={(e) => setFormData({ ...formData, final_dentro_sofrida: e.target.value })} placeholder="6" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+                  <div>
+                    <Label>Cruzamentos % Acerto</Label>
+                    <Input type="number" value={formData.pct_cruzamentos_acerto} onChange={(e) => setFormData({ ...formData, pct_cruzamentos_acerto: e.target.value })} placeholder="34" />
+                  </div>
+                  <div>
+                    <Label>Entradas da Área /90</Label>
+                    <Input type="number" value={formData.entradas_area_90} onChange={(e) => setFormData({ ...formData, entradas_area_90: e.target.value })} placeholder="22" />
+                  </div>
+                  <div>
+                    <Label>Toques na Área /90</Label>
+                    <Input type="number" value={formData.toques_area_90} onChange={(e) => setFormData({ ...formData, toques_area_90: e.target.value })} placeholder="15" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+                  <div>
+                    <Label>Cruzamentos % Acerto Sofridos</Label>
+                    <Input type="number" value={formData.pct_cruzamentos_acerto_sofridos} onChange={(e) => setFormData({ ...formData, pct_cruzamentos_acerto_sofridos: e.target.value })} placeholder="31" />
+                  </div>
+                  <div>
+                    <Label>Entradas da Área Sofrida /90</Label>
+                    <Input type="number" value={formData.entradas_area_sofrida_90} onChange={(e) => setFormData({ ...formData, entradas_area_sofrida_90: e.target.value })} placeholder="19" />
+                  </div>
+                  <div>
+                    <Label>Toques na Área Sofridos /90</Label>
+                    <Input type="number" value={formData.toques_area_sofridos_90} onChange={(e) => setFormData({ ...formData, toques_area_sofridos_90: e.target.value })} placeholder="12" />
                   </div>
                 </div>
               </div>
@@ -798,7 +870,7 @@ export default function Partidas() {
           </DialogHeader>
           {stats && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center">
@@ -817,7 +889,7 @@ export default function Partidas() {
                 </Card>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm font-semibold text-gray-700 mb-2">Finalizações</div>
                   <div className="space-y-1 text-sm">

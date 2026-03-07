@@ -1,4 +1,3 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -18,7 +17,6 @@ import { useIsMobile } from "@/hooks/useMobile";
 import { LayoutDashboard, PanelLeft, Moon, Sun } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
-import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
@@ -39,15 +37,10 @@ export default function DashboardLayout({
     const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
-  const { loading, user, logout } = useAuth();
-
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
   }, [sidebarWidth]);
 
-  if (loading) {
-    return <DashboardLayoutSkeleton />
-  }
 
   return (
     <SidebarProvider
@@ -73,7 +66,6 @@ function DashboardLayoutContent({
   children,
   setSidebarWidth,
 }: DashboardLayoutContentProps) {
-  const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [location, setLocation] = useLocation();
   const { state, toggleSidebar } = useSidebar();
