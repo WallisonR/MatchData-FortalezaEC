@@ -10,8 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Trash, Download } from "lucide-react";
-import { generatePDFReport } from "@/lib/reportGenerator";
+import { PlusCircle, Trash } from "lucide-react";
 
 type KpiDef = {
   id: string;
@@ -152,16 +151,16 @@ const getStatusColor = (
 
   // quando MAIOR é melhor
   if (better === "higher") {
-    if (value >= metaG2) return "bg-green-200 border-green-400";
-    if (value >= metaG6) return "bg-yellow-200 border-yellow-400";
-    return "bg-yellow-100 border-yellow-300";
+    if (value >= metaG2) return "bg-green-200 border-green-400 text-green-950 dark:bg-emerald-300 dark:border-emerald-500 dark:text-emerald-950";
+    if (value >= metaG6) return "bg-yellow-200 border-yellow-400 text-yellow-950 dark:bg-amber-300 dark:border-amber-500 dark:text-amber-950";
+    return "bg-yellow-100 border-yellow-300 text-yellow-950 dark:bg-amber-200 dark:border-amber-400 dark:text-amber-950";
   }
 
   // quando MENOR é melhor
   if (better === "lower") {
-    if (value <= metaG2) return "bg-green-200 border-green-400";
-    if (value <= metaG6) return "bg-yellow-200 border-yellow-400";
-    return "bg-yellow-100 border-yellow-300";
+    if (value <= metaG2) return "bg-green-200 border-green-400 text-green-950 dark:bg-emerald-300 dark:border-emerald-500 dark:text-emerald-950";
+    if (value <= metaG6) return "bg-yellow-200 border-yellow-400 text-yellow-950 dark:bg-amber-300 dark:border-amber-500 dark:text-amber-950";
+    return "bg-yellow-100 border-yellow-300 text-yellow-950 dark:bg-amber-200 dark:border-amber-400 dark:text-amber-950";
   }
 
 };
@@ -174,14 +173,6 @@ const getStatusColor = (
           <p className="text-muted-foreground">Edite valores por rodada — as metas (G2/G6) são fixas</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button 
-            onClick={() => generatePDFReport({ rounds, values, seasonYear: 2026 })} 
-            variant="default" 
-            className="gap-2"
-          >
-            <Download className="w-4 h-4" />
-            Exportar Relatório
-          </Button>
           <Button onClick={addRound} variant="outline" className="gap-2">
             <PlusCircle className="w-4 h-4" />
             Adicionar Rodada
