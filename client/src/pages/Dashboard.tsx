@@ -10,8 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Trash, Download } from "lucide-react";
-import { generatePDFReport } from "@/lib/reportGenerator";
+import { PlusCircle, Trash } from "lucide-react";
 
 type KpiDef = {
   id: string;
@@ -174,14 +173,6 @@ const getStatusColor = (
           <p className="text-muted-foreground">Edite valores por rodada — as metas (G2/G6) são fixas</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button 
-            onClick={() => generatePDFReport({ rounds, values, seasonYear: 2026 })} 
-            variant="default" 
-            className="gap-2"
-          >
-            <Download className="w-4 h-4" />
-            Exportar Relatório
-          </Button>
           <Button onClick={addRound} variant="outline" className="gap-2">
             <PlusCircle className="w-4 h-4" />
             Adicionar Rodada
