@@ -1,19 +1,20 @@
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export interface ReportData {
   rounds: string[];
   values: Record<string, Record<string, number | null>>;
   seasonYear: number;
+  competition: string;
 }
 
 export async function generatePDFReport(data: ReportData) {
   // Create a temporary container for rendering HTML to canvas
-  const container = document.createElement('div');
-  container.style.position = 'absolute';
-  container.style.left = '-9999px';
-  container.style.width = '1400px';
-  container.style.backgroundColor = '#ffffff';
+  const container = document.createElement("div");
+  container.style.position = "absolute";
+  container.style.left = "-9999px";
+  container.style.width = "1400px";
+  container.style.backgroundColor = "#ffffff";
   container.innerHTML = getReportHTML(data);
   document.body.appendChild(container);
 
@@ -23,15 +24,15 @@ export async function generatePDFReport(data: ReportData) {
       scale: 2,
       useCORS: true,
       logging: false,
-      backgroundColor: '#ffffff',
+      backgroundColor: "#ffffff",
     });
 
     // Create PDF from canvas
-    const imgData = canvas.toDataURL('image/png');
+    const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF({
-      orientation: 'landscape',
-      unit: 'mm',
-      format: 'a4',
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4",
     });
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -51,7 +52,7 @@ export async function generatePDFReport(data: ReportData) {
     const x = (pdfWidth - finalWidth) / 2;
     const y = (pdfHeight - finalHeight) / 2;
 
-    pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
+    pdf.addImage(imgData, "PNG", x, y, finalWidth, finalHeight);
     pdf.save(`matchdata-relatorio-${new Date().getTime()}.pdf`);
   } finally {
     document.body.removeChild(container);
@@ -59,37 +60,136 @@ export async function generatePDFReport(data: ReportData) {
 }
 
 function getReportHTML(data: ReportData): string {
-  const { rounds, values, seasonYear } = data;
-  
+  const { rounds, values, seasonYear, competition } = data;
+
   // Filter out 'fec_media' for display rounds
-  const displayRounds = rounds.filter(r => r !== 'fec_media');
-  
+  const displayRounds = rounds.filter(r => r !== "fec_media");
+
   const kpiDefs = [
-    { id: 'pontos', name: 'Pontos', group: 'offensive' },
-    { id: 'media_gols', name: 'Média de Gols', group: 'offensive' },
-    { id: 'xg', name: 'XG (Expected Goals)', group: 'offensive' },
-    { id: 'diferencial_gols', name: 'Diferencial de Gols (Gols - xG)', group: 'offensive' },
-    { id: 'posse', name: 'Posse %', group: 'offensive' },
-    { id: 'pct_jogos_marcou', name: '% de jogos que marcou', group: 'offensive' },
-    { id: 'finalizacoes', name: 'Finalização/90min', group: 'offensive' },
-    { id: 'pct_final_certa', name: '% Finalização Certa/90min', group: 'offensive' },
-    { id: 'final_dentro', name: 'Finalização de Dentro da área/90min', group: 'offensive' },
-    
-    { id: 'media_gols_sofridos', name: 'Média de Gols Sofridos', group: 'defensive' },
-    { id: 'xg_contra', name: 'XG Contra', group: 'defensive' },
-    { id: 'posse_contra', name: 'Posse Contra', group: 'defensive' },
-    { id: 'pct_nao_sofreu', name: '% de jogos que não sofreu gols', group: 'defensive' },
-    { id: 'final_sofrida', name: 'Finalização Sofrida/90min', group: 'defensive' },
-    { id: 'pct_final_certa_sofrida', name: '% Finalização Certa Sofrida/90min', group: 'defensive' },
-    { id: 'final_dentro_sofrida', name: 'Finalização de Dentro da área Sofrida/90min', group: 'defensive' },
+    {
+      id: "pontos",
+      name: "Pontos",
+      group: "offensive",
+      meta: 65,
+      better: "higher" as const,
+    },
+    {
+      id: "media_gols",
+      name: "Média de Gols",
+      group: "offensive",
+      meta: 1.23,
+      better: "higher" as const,
+    },
+    {
+      id: "xg",
+      name: "XG (Expected Goals)",
+      group: "offensive",
+      meta: 1.3,
+      better: "higher" as const,
+    },
+    {
+      id: "posse",
+      name: "Posse %",
+      group: "offensive",
+      meta: 51,
+      better: "higher" as const,
+    },
+    {
+      id: "pct_jogos_marcou",
+      name: "% de jogos que marcou",
+      group: "offensive",
+      meta: 76,
+      better: "higher" as const,
+    },
+    {
+      id: "finalizacoes",
+      name: "Finalização/90min",
+      group: "offensive",
+      meta: 12,
+      better: "higher" as const,
+    },
+    {
+      id: "pct_final_certa",
+      name: "% Finalização Certa/90min",
+      group: "offensive",
+      meta: 35,
+      better: "higher" as const,
+    },
+    {
+      id: "final_dentro",
+      name: "Finalização de Dentro da área/90min",
+      group: "offensive",
+      meta: 8,
+      better: "higher" as const,
+    },
+
+    {
+      id: "media_gols_sofridos",
+      name: "Média de Gols Sofridos",
+      group: "defensive",
+      meta: 0.88,
+      better: "lower" as const,
+    },
+    {
+      id: "xg_contra",
+      name: "XG Contra",
+      group: "defensive",
+      meta: 0.97,
+      better: "lower" as const,
+    },
+    {
+      id: "posse_contra",
+      name: "Posse Contra",
+      group: "defensive",
+      meta: 49,
+      better: "lower" as const,
+    },
+    {
+      id: "pct_nao_sofreu",
+      name: "% de jogos que não sofreu gols",
+      group: "defensive",
+      meta: 45,
+      better: "higher" as const,
+    },
+    {
+      id: "final_sofrida",
+      name: "Finalização Sofrida/90min",
+      group: "defensive",
+      meta: 11,
+      better: "lower" as const,
+    },
+    {
+      id: "pct_final_certa_sofrida",
+      name: "% Finalização Certa Sofrida/90min",
+      group: "defensive",
+      meta: 32,
+      better: "lower" as const,
+    },
+    {
+      id: "final_dentro_sofrida",
+      name: "Finalização de Dentro da área Sofrida/90min",
+      group: "defensive",
+      meta: 6,
+      better: "lower" as const,
+    },
   ];
 
-  const offensiveKpis = kpiDefs.filter(k => k.group === 'offensive');
-  const defensiveKpis = kpiDefs.filter(k => k.group === 'defensive');
+  const offensiveKpis = kpiDefs.filter(k => k.group === "offensive");
+  const defensiveKpis = kpiDefs.filter(k => k.group === "defensive");
 
   const formatValue = (val: number | null) => {
-    if (val === null) return '-';
+    if (val === null) return "-";
     return val % 1 !== 0 ? val.toFixed(2) : val.toString();
+  };
+
+  const getCellColor = (
+    kpi: { meta: number; better: "higher" | "lower" },
+    val: number | null
+  ) => {
+    if (val === null) return "#ffffff";
+    const onTarget =
+      kpi.better === "higher" ? val >= kpi.meta : val <= kpi.meta;
+    return onTarget ? "#dcfce7" : "#fef9c3";
   };
 
   const roundNumberHeaders = displayRounds
@@ -98,37 +198,37 @@ function getReportHTML(data: ReportData): string {
       const num = match ? match[1] : round;
       return `<td style="padding: 8px 4px; text-align: center; font-weight: 600; color: white; border: 1px solid #062a57;">${num}</td>`;
     })
-    .join('');
+    .join("");
 
   const offensiveRows = offensiveKpis
     .map(kpi => {
       const cells = displayRounds
         .map(round => {
           const val = values[kpi.id]?.[round] ?? null;
-          return `<td style="padding: 6px 4px; text-align: center; font-size: 12px; border-right: 1px solid #ddd;">${formatValue(val)}</td>`;
+          return `<td style="padding: 6px 4px; text-align: center; font-size: 12px; border-right: 1px solid #ddd; background-color: ${getCellColor(kpi, val)};">${formatValue(val)}</td>`;
         })
-        .join('');
+        .join("");
       return `<tr style="border-bottom: 1px solid #ddd; height: 28px;">
         <td style="padding: 6px 8px; text-align: left; font-weight: 500; font-size: 12px; border-right: 1px solid #ddd;">${kpi.name}</td>
         ${cells}
       </tr>`;
     })
-    .join('');
+    .join("");
 
   const defensiveRows = defensiveKpis
     .map(kpi => {
       const cells = displayRounds
         .map(round => {
           const val = values[kpi.id]?.[round] ?? null;
-          return `<td style="padding: 6px 4px; text-align: center; font-size: 12px; border-right: 1px solid #ddd;">${formatValue(val)}</td>`;
+          return `<td style="padding: 6px 4px; text-align: center; font-size: 12px; border-right: 1px solid #ddd; background-color: ${getCellColor(kpi, val)};">${formatValue(val)}</td>`;
         })
-        .join('');
+        .join("");
       return `<tr style="border-bottom: 1px solid #ddd; height: 28px;">
         <td style="padding: 6px 8px; text-align: left; font-weight: 500; font-size: 12px; border-right: 1px solid #ddd;">${kpi.name}</td>
         ${cells}
       </tr>`;
     })
-    .join('');
+    .join("");
 
   return `
     <!DOCTYPE html>
@@ -324,7 +424,7 @@ function getReportHTML(data: ReportData): string {
     <body>
       <div class="page">
         <div class="header-top">
-          MÉTRICAS SÉRIE B - TEMPORADA ${seasonYear}
+          MÉTRICAS ${competition.toUpperCase()} - TEMPORADA ${seasonYear}
         </div>
         
         <div class="header-subtitle">
@@ -339,13 +439,15 @@ function getReportHTML(data: ReportData): string {
 
             <div class="title-section">
               <div class="title-main">TEMPORADA ${seasonYear} FORTALEZA</div>
-              <div class="title-sub">MÉTRICAS SÉRIE B</div>
+              <div class="title-sub">MÉTRICAS ${competition.toUpperCase()}</div>
               <div class="rounds-info">
-                ${displayRounds.map(r => {
-                  const match = r.match(/r(\d+)/);
-                  const num = match ? match[1] : r;
-                  return `<div class="round-badge">${num}</div>`;
-                }).join('')}
+                ${displayRounds
+                  .map(r => {
+                    const match = r.match(/r(\d+)/);
+                    const num = match ? match[1] : r;
+                    return `<div class="round-badge">${num}</div>`;
+                  })
+                  .join("")}
               </div>
             </div>
           </div>
