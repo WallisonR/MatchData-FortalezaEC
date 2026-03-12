@@ -1,37 +1,179 @@
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export interface ReportData {
   rounds: string[];
   values: Record<string, Record<string, number | null>>;
   seasonYear: number;
+  competition: string;
 }
 
+type KpiDef = {
+  id: string;
+  name: string;
+  group: "offensive" | "defensive";
+  meta: number;
+  better: "higher" | "lower";
+};
+
+const KPI_DEFS: KpiDef[] = [
+  {
+    id: "pontos",
+    name: "Pontos",
+    group: "offensive",
+    meta: 65,
+    better: "higher",
+  },
+  {
+    id: "media_gols",
+    name: "Média de Gols",
+    group: "offensive",
+    meta: 1.23,
+    better: "higher",
+  },
+  {
+    id: "xg",
+    name: "XG (Expected Goals)",
+    group: "offensive",
+    meta: 1.3,
+    better: "higher",
+  },
+  {
+    id: "posse",
+    name: "Posse %",
+    group: "offensive",
+    meta: 51,
+    better: "higher",
+  },
+  {
+    id: "pct_jogos_marcou",
+    name: "% de jogos que marcou",
+    group: "offensive",
+    meta: 76,
+    better: "higher",
+  },
+  {
+    id: "finalizacoes",
+    name: "Finalização/90min",
+    group: "offensive",
+    meta: 12,
+    better: "higher",
+  },
+  {
+    id: "pct_final_certa",
+    name: "% Finalização Certa/90min",
+    group: "offensive",
+    meta: 35,
+    better: "higher",
+  },
+  {
+    id: "final_dentro",
+    name: "Finalização de Dentro da área/90min",
+    group: "offensive",
+    meta: 8,
+    better: "higher",
+  },
+
+  {
+    id: "media_gols_sofridos",
+    name: "Média de Gols Sofridos",
+    group: "defensive",
+    meta: 0.88,
+    better: "lower",
+  },
+  {
+    id: "xg_contra",
+    name: "XG Contra",
+    group: "defensive",
+    meta: 0.97,
+    better: "lower",
+  },
+  {
+    id: "posse_contra",
+    name: "Posse Contra",
+    group: "defensive",
+    meta: 49,
+    better: "lower",
+  },
+  {
+    id: "pct_nao_sofreu",
+    name: "% de jogos que não sofreu gols",
+    group: "defensive",
+    meta: 45,
+    better: "higher",
+  },
+  {
+    id: "final_sofrida",
+    name: "Finalização Sofrida/90min",
+    group: "defensive",
+    meta: 11,
+    better: "lower",
+  },
+  {
+    id: "pct_final_certa_sofrida",
+    name: "% Finalização Certa Sofrida/90min",
+    group: "defensive",
+    meta: 32,
+    better: "lower",
+  },
+  {
+    id: "final_dentro_sofrida",
+    name: "Finalização de Dentro da área Sofrida/90min",
+    group: "defensive",
+    meta: 6,
+    better: "lower",
+  },
+];
+
+const extractRoundNumber = (round: string) => {
+  const match = round.match(/r(\d+)/i);
+  return match?.[1] || round;
+};
+
+const getDisplayRounds = (rounds: string[]) =>
+  rounds.filter(round => round !== "fec_media");
+
+const getRoundDescription = (displayRounds: string[]) => {
+  if (displayRounds.length === 0) return "Sem rodada selecionada";
+  if (displayRounds.length === 1) {
+    return `Relatório referente à Rodada ${extractRoundNumber(displayRounds[0])}`;
+  }
+  return `Relatório referente às Rodadas ${displayRounds.map(extractRoundNumber).join(", ")}`;
+};
+
+const formatForFileName = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .toLowerCase();
+
 export async function generatePDFReport(data: ReportData) {
-  // Create a temporary container for rendering HTML to canvas
-  const container = document.createElement('div');
-  container.style.position = 'absolute';
-  container.style.left = '-9999px';
-  container.style.width = '1400px';
-  container.style.backgroundColor = '#ffffff';
-  container.innerHTML = getReportHTML(data);
+  const displayRounds = getDisplayRounds(data.rounds);
+  const roundDescription = getRoundDescription(displayRounds);
+
+  const container = document.createElement("div");
+  container.style.position = "absolute";
+  container.style.left = "-9999px";
+  container.style.width = "1400px";
+  container.style.backgroundColor = "#ffffff";
+  container.innerHTML = getReportHTML(data, roundDescription);
   document.body.appendChild(container);
 
   try {
-    // Convert HTML to canvas
     const canvas = await html2canvas(container, {
       scale: 2,
       useCORS: true,
       logging: false,
-      backgroundColor: '#ffffff',
+      backgroundColor: "#ffffff",
     });
 
-    // Create PDF from canvas
-    const imgData = canvas.toDataURL('image/png');
+    const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF({
-      orientation: 'landscape',
-      unit: 'mm',
-      format: 'a4',
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4",
     });
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -51,343 +193,203 @@ export async function generatePDFReport(data: ReportData) {
     const x = (pdfWidth - finalWidth) / 2;
     const y = (pdfHeight - finalHeight) / 2;
 
-    pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
-    pdf.save(`matchdata-relatorio-${new Date().getTime()}.pdf`);
+    const fileCompetition = formatForFileName(data.competition);
+    const fileRound = formatForFileName(roundDescription);
+
+    pdf.addImage(imgData, "PNG", x, y, finalWidth, finalHeight);
+    pdf.save(`relatorio-${fileCompetition}-${fileRound}.pdf`);
   } finally {
     document.body.removeChild(container);
   }
 }
 
-function getReportHTML(data: ReportData): string {
-  const { rounds, values, seasonYear } = data;
-  
-  // Filter out 'fec_media' for display rounds
-  const displayRounds = rounds.filter(r => r !== 'fec_media');
-  
-  const kpiDefs = [
-    { id: 'pontos', name: 'Pontos', group: 'offensive' },
-    { id: 'media_gols', name: 'Média de Gols', group: 'offensive' },
-    { id: 'xg', name: 'XG (Expected Goals)', group: 'offensive' },
-    { id: 'diferencial_gols', name: 'Diferencial de Gols (Gols - xG)', group: 'offensive' },
-    { id: 'posse', name: 'Posse %', group: 'offensive' },
-    { id: 'pct_jogos_marcou', name: '% de jogos que marcou', group: 'offensive' },
-    { id: 'finalizacoes', name: 'Finalização/90min', group: 'offensive' },
-    { id: 'pct_final_certa', name: '% Finalização Certa/90min', group: 'offensive' },
-    { id: 'final_dentro', name: 'Finalização de Dentro da área/90min', group: 'offensive' },
-    
-    { id: 'media_gols_sofridos', name: 'Média de Gols Sofridos', group: 'defensive' },
-    { id: 'xg_contra', name: 'XG Contra', group: 'defensive' },
-    { id: 'posse_contra', name: 'Posse Contra', group: 'defensive' },
-    { id: 'pct_nao_sofreu', name: '% de jogos que não sofreu gols', group: 'defensive' },
-    { id: 'final_sofrida', name: 'Finalização Sofrida/90min', group: 'defensive' },
-    { id: 'pct_final_certa_sofrida', name: '% Finalização Certa Sofrida/90min', group: 'defensive' },
-    { id: 'final_dentro_sofrida', name: 'Finalização de Dentro da área Sofrida/90min', group: 'defensive' },
-  ];
+function getReportHTML(data: ReportData, roundDescription: string): string {
+  const { rounds, values, seasonYear, competition } = data;
+  const displayRounds = getDisplayRounds(rounds);
 
-  const offensiveKpis = kpiDefs.filter(k => k.group === 'offensive');
-  const defensiveKpis = kpiDefs.filter(k => k.group === 'defensive');
+  const offensiveKpis = KPI_DEFS.filter(k => k.group === "offensive");
+  const defensiveKpis = KPI_DEFS.filter(k => k.group === "defensive");
 
   const formatValue = (val: number | null) => {
-    if (val === null) return '-';
+    if (val === null) return "-";
     return val % 1 !== 0 ? val.toFixed(2) : val.toString();
   };
 
+  const getCellColor = (kpi: KpiDef, val: number | null) => {
+    if (val === null) return "#ffffff";
+    const onTarget =
+      kpi.better === "higher" ? val >= kpi.meta : val <= kpi.meta;
+    return onTarget ? "#dcfce7" : "#fef9c3";
+  };
+
   const roundNumberHeaders = displayRounds
-    .map(round => {
-      const match = round.match(/r(\d+)/);
-      const num = match ? match[1] : round;
-      return `<td style="padding: 8px 4px; text-align: center; font-weight: 600; color: white; border: 1px solid #062a57;">${num}</td>`;
-    })
-    .join('');
+    .map(round => `<td class="round-col">${extractRoundNumber(round)}</td>`)
+    .join("");
 
-  const offensiveRows = offensiveKpis
-    .map(kpi => {
-      const cells = displayRounds
-        .map(round => {
-          const val = values[kpi.id]?.[round] ?? null;
-          return `<td style="padding: 6px 4px; text-align: center; font-size: 12px; border-right: 1px solid #ddd;">${formatValue(val)}</td>`;
-        })
-        .join('');
-      return `<tr style="border-bottom: 1px solid #ddd; height: 28px;">
-        <td style="padding: 6px 8px; text-align: left; font-weight: 500; font-size: 12px; border-right: 1px solid #ddd;">${kpi.name}</td>
-        ${cells}
-      </tr>`;
-    })
-    .join('');
+  const buildRows = (list: KpiDef[]) =>
+    list
+      .map(kpi => {
+        const cells = displayRounds
+          .map(round => {
+            const val = values[kpi.id]?.[round] ?? null;
+            return `<td class="value-cell" style="background:${getCellColor(kpi, val)}">${formatValue(val)}</td>`;
+          })
+          .join("");
 
-  const defensiveRows = defensiveKpis
-    .map(kpi => {
-      const cells = displayRounds
-        .map(round => {
-          const val = values[kpi.id]?.[round] ?? null;
-          return `<td style="padding: 6px 4px; text-align: center; font-size: 12px; border-right: 1px solid #ddd;">${formatValue(val)}</td>`;
-        })
-        .join('');
-      return `<tr style="border-bottom: 1px solid #ddd; height: 28px;">
-        <td style="padding: 6px 8px; text-align: left; font-weight: 500; font-size: 12px; border-right: 1px solid #ddd;">${kpi.name}</td>
-        ${cells}
-      </tr>`;
-    })
-    .join('');
+        return `<tr>
+          <td class="metric-cell">${kpi.name}</td>
+          ${cells}
+        </tr>`;
+      })
+      .join("");
+
+  const legend = `
+    <div class="legend">
+      <div class="legend-item"><span class="legend-color green"></span> Dentro ou acima da meta</div>
+      <div class="legend-item"><span class="legend-color yellow"></span> Abaixo da meta</div>
+    </div>
+  `;
 
   return `
     <!DOCTYPE html>
     <html>
     <head>
-      <meta charset="UTF-8">
+      <meta charset="UTF-8" />
       <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: white; }
-        .page { width: 1400px; background: white; }
-        
-        .header-top {
-          background: linear-gradient(to bottom, #0e4c92 0%, #0e4c92 85%, #e31e24 85%, #e31e24 100%);
-          color: white;
-          padding: 16px;
-          text-align: center;
-          font-size: 28px;
-          font-weight: bold;
-          letter-spacing: 2px;
-        }
-        
-        .header-subtitle {
-          background: white;
-          padding: 12px 16px;
-          font-size: 11px;
-          text-align: center;
-          color: #333;
-          border-bottom: 1px solid #ccc;
-          letter-spacing: 1px;
-          font-weight: 600;
-        }
-        
-        .content { padding: 0; }
-        
-        .main-section {
-          display: flex;
-          gap: 0;
-        }
-        
-        .logo-section {
-          flex: 0 0 150px;
-          border-right: 2px solid #0e4c92;
-          padding: 20px;
-          background: white;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-start;
-          align-items: center;
-        }
-        
-        .logo-box {
-          border: 2px solid #0e4c92;
-          border-radius: 50%;
-          width: 80px;
-          height: 80px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: bold;
-          color: #0e4c92;
-          font-size: 10px;
-          text-align: center;
-          background: #f0f0f0;
-        }
-        
-        .title-section {
-          flex: 1;
-          padding: 16px 20px;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-        }
-        
-        .title-main {
-          font-size: 18px;
-          font-weight: bold;
-          color: #0e4c92;
-          margin-bottom: 4px;
-        }
-        
-        .title-sub {
-          font-size: 14px;
-          color: #0e4c92;
-          margin-bottom: 12px;
-        }
-        
-        .rounds-info {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-          font-size: 12px;
-        }
-        
-        .round-badge {
-          background: #0e4c92;
-          color: white;
-          padding: 4px 8px;
-          border-radius: 3px;
-          font-weight: 600;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #fff; color: #111827; }
+        .page { width: 1400px; padding: 24px 28px; }
+
+        .top-bar {
+          background: linear-gradient(90deg, #0e4c92 0%, #0e4c92 72%, #e31e24 72%, #e31e24 100%);
+          color: #fff;
+          border-radius: 10px;
+          padding: 18px 20px;
+          margin-bottom: 14px;
         }
 
-        .tables-wrapper {
+        .title { font-size: 28px; font-weight: 700; }
+        .subtitle { font-size: 15px; margin-top: 6px; opacity: 0.95; }
+
+        .meta-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 10px;
+          margin-bottom: 14px;
+        }
+
+        .meta-card {
+          border: 1px solid #dbe3ef;
+          border-radius: 8px;
+          padding: 10px 12px;
+          background: #f8fafc;
+        }
+
+        .meta-label { font-size: 11px; color: #4b5563; text-transform: uppercase; letter-spacing: 0.4px; }
+        .meta-value { margin-top: 4px; font-size: 15px; font-weight: 700; color: #0e4c92; }
+
+        .round-description {
+          border-left: 4px solid #e31e24;
+          background: #fff7f7;
+          color: #991b1b;
+          padding: 10px 12px;
+          border-radius: 6px;
+          font-weight: 600;
+          margin-bottom: 14px;
+        }
+
+        .legend {
           display: flex;
           gap: 20px;
-          padding: 20px;
-          background: white;
-        }
-
-        .table-group {
-          flex: 1;
-        }
-
-        .table-title {
-          background: #0e4c92;
-          color: white;
-          padding: 10px;
-          font-weight: bold;
-          font-size: 13px;
-          margin-bottom: 0;
-          text-align: center;
-        }
-
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          border: 1px solid #0e4c92;
-        }
-
-        thead tr {
-          background: #0e4c92;
-          color: white;
-        }
-
-        th {
-          padding: 8px 4px;
-          text-align: center;
-          font-weight: 600;
-          font-size: 11px;
-          border-right: 1px solid #062a57;
-          border-bottom: 1px solid #062a57;
-        }
-
-        th:first-child {
-          text-align: left;
-          border-left: none;
-        }
-
-        tbody tr {
-          background: white;
-        }
-
-        tbody tr:nth-child(even) {
-          background: #f9f9f9;
-        }
-
-        td {
-          padding: 6px 4px;
+          align-items: center;
+          margin: 6px 0 16px;
           font-size: 12px;
-          border-right: 1px solid #ddd;
         }
 
-        td:first-child {
-          text-align: left;
-          font-weight: 500;
-          padding-left: 8px;
-        }
+        .legend-item { display: flex; align-items: center; gap: 8px; }
+        .legend-color { width: 14px; height: 14px; border-radius: 3px; border: 1px solid #cbd5e1; }
+        .legend-color.green { background: #dcfce7; }
+        .legend-color.yellow { background: #fef9c3; }
+
+        .tables { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .table-wrap { border: 1px solid #d1d5db; border-radius: 8px; overflow: hidden; }
+        .table-title { background: #0e4c92; color: white; padding: 10px 12px; font-weight: 700; font-size: 13px; }
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { background: #0e4c92; color: white; }
+        th, td { border: 1px solid #e5e7eb; }
+        th { padding: 7px 6px; font-size: 11px; text-align: center; }
+        .metric-head { text-align: left; width: 54%; }
+        .round-col-head { width: 46%; }
+        .metric-cell { font-size: 12px; padding: 7px 8px; font-weight: 600; }
+        .value-cell { font-size: 12px; text-align: center; padding: 7px 4px; }
+        .round-col { font-size: 11px; text-align: center; padding: 7px 3px; font-weight: 700; }
 
         .footer {
-          background: linear-gradient(to top, #e31e24 0%, #e31e24 15%, #0e4c92 15%, #0e4c92 100%);
-          color: white;
-          padding: 16px;
-          text-align: center;
-          font-weight: bold;
-          font-size: 13px;
-          position: relative;
-          margin-top: 20px;
-        }
-
-        .footer-text {
-          font-size: 12px;
-          margin-top: 4px;
-        }
-
-        .footer-source {
-          position: absolute;
-          right: 20px;
-          bottom: 16px;
+          margin-top: 14px;
           font-size: 11px;
-          font-style: italic;
+          color: #4b5563;
+          text-align: right;
         }
       </style>
     </head>
     <body>
       <div class="page">
-        <div class="header-top">
-          MÉTRICAS SÉRIE B - TEMPORADA ${seasonYear}
-        </div>
-        
-        <div class="header-subtitle">
-          CADJU - CENTRO DE ANÁLISE DE DESEMPENHO DENTALEZA
+        <div class="top-bar">
+          <div class="title">Relatório de Performance - Fortaleza EC</div>
+          <div class="subtitle">Modelo MatchData | KPIs Ofensivos e Defensivos</div>
         </div>
 
-        <div class="content">
-          <div class="main-section">
-            <div class="logo-section">
-              <div class="logo-box">FORTALEZA</div>
-            </div>
-
-            <div class="title-section">
-              <div class="title-main">TEMPORADA ${seasonYear} FORTALEZA</div>
-              <div class="title-sub">MÉTRICAS SÉRIE B</div>
-              <div class="rounds-info">
-                ${displayRounds.map(r => {
-                  const match = r.match(/r(\d+)/);
-                  const num = match ? match[1] : r;
-                  return `<div class="round-badge">${num}</div>`;
-                }).join('')}
-              </div>
-            </div>
+        <div class="meta-grid">
+          <div class="meta-card">
+            <div class="meta-label">Competição</div>
+            <div class="meta-value">${competition}</div>
           </div>
-
-          <div class="tables-wrapper">
-            <div class="table-group">
-              <div class="table-title">MÉTRICAS OFENSIVAS</div>
-              <table>
-                <thead>
-                  <tr>
-                    <th>ROD.38 (FORTALEZA)</th>
-                    ${roundNumberHeaders}
-                  </tr>
-                </thead>
-                <tbody>
-                  ${offensiveRows}
-                </tbody>
-              </table>
-            </div>
-
-            <div class="table-group">
-              <div class="table-title">MÉTRICAS DEFENSIVAS</div>
-              <table>
-                <thead>
-                  <tr>
-                    <th>ROD.38 (FORTALEZA 2026)</th>
-                    ${roundNumberHeaders}
-                  </tr>
-                </thead>
-                <tbody>
-                  ${defensiveRows}
-                </tbody>
-              </table>
-            </div>
+          <div class="meta-card">
+            <div class="meta-label">Temporada</div>
+            <div class="meta-value">${seasonYear}</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Rodadas no relatório</div>
+            <div class="meta-value">${displayRounds.map(extractRoundNumber).join(", ") || "-"}</div>
           </div>
         </div>
 
-        <div class="footer">
-          CENTRO DE ANÁLISE DE DESEMPENHO DO FORTALEZA
-          <div class="footer-text"></div>
-          <div class="footer-source">FONTE: MATCHDATA</div>
+        <div class="round-description">${roundDescription}</div>
+        ${legend}
+
+        <div class="tables">
+          <div class="table-wrap">
+            <div class="table-title">Métricas Ofensivas</div>
+            <table>
+              <thead>
+                <tr>
+                  <th class="metric-head">Indicador</th>
+                  ${roundNumberHeaders || '<th class="round-col-head">Sem rodada</th>'}
+                </tr>
+              </thead>
+              <tbody>
+                ${buildRows(offensiveKpis)}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-wrap">
+            <div class="table-title">Métricas Defensivas</div>
+            <table>
+              <thead>
+                <tr>
+                  <th class="metric-head">Indicador</th>
+                  ${roundNumberHeaders || '<th class="round-col-head">Sem rodada</th>'}
+                </tr>
+              </thead>
+              <tbody>
+                ${buildRows(defensiveKpis)}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        <div class="footer">FONTE: MATCHDATA | Gerado em ${new Date().toLocaleDateString("pt-BR")}</div>
       </div>
     </body>
     </html>
