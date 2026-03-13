@@ -73,6 +73,27 @@ const KPI_DEFS: KpiDef[] = [
     meta: 8,
     better: "higher",
   },
+  {
+    id: "pct_cruzamentos_acerto",
+    name: "Cruzamentos % Acerto",
+    group: "offensive",
+    meta: 34,
+    better: "higher",
+  },
+  {
+    id: "entradas_area_90",
+    name: "Entradas da Área /90min",
+    group: "offensive",
+    meta: 22,
+    better: "higher",
+  },
+  {
+    id: "toques_area_90",
+    name: "Toques na Área /90min",
+    group: "offensive",
+    meta: 15,
+    better: "higher",
+  },
 
   {
     id: "media_gols_sofridos",
@@ -121,6 +142,27 @@ const KPI_DEFS: KpiDef[] = [
     name: "Finalização de Dentro da área Sofrida/90min",
     group: "defensive",
     meta: 6,
+    better: "lower",
+  },
+  {
+    id: "pct_cruzamentos_acerto_sofridos",
+    name: "Cruzamentos % Acerto Sofridos",
+    group: "defensive",
+    meta: 31,
+    better: "lower",
+  },
+  {
+    id: "entradas_area_sofrida_90",
+    name: "Entradas da Área Sofrida /90min",
+    group: "defensive",
+    meta: 19,
+    better: "lower",
+  },
+  {
+    id: "toques_area_sofridos_90",
+    name: "Toques na Área Sofridos /90min",
+    group: "defensive",
+    meta: 12,
     better: "lower",
   },
 ];
