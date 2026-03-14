@@ -391,11 +391,11 @@ export default function Dashboard() {
 
   const kpiAverage = (kpiId: string) => {
     const row = values[kpiId] || {};
-    const numeric: number[] = [];
-    rounds.forEach(c => {
-      const val = row[c];
-      if (val != null) numeric.push(val);
-    });
+    const numeric = rounds
+      .filter(round => round !== "fec_media")
+      .map(round => row[round])
+      .filter((val): val is number => val != null);
+
     if (numeric.length === 0) return null;
     return numeric.reduce((a, b) => a + b, 0) / numeric.length;
   };
@@ -588,20 +588,26 @@ export default function Dashboard() {
                           <div className="relative flex justify-center">
                             <input
                               inputMode="numeric"
-                              value={values[k.id]?.[c] ?? ""}
-                              onChange={e =>
+                              value={
+                                c === "fec_media"
+                                  ? (kpiAverage(k.id) ?? "")
+                                  : (values[k.id]?.[c] ?? "")
+                              }
+                              onChange={e => {
+                                if (c === "fec_media") return;
                                 setCell(
                                   k.id,
                                   c,
                                   e.target.value === ""
                                     ? null
                                     : Number(e.target.value)
-                                )
-                              }
-                              className={`w-24 h-8 px-2 pr-6 text-right border rounded focus:outline-none focus:ring-2 focus:ring-input ${getStatusColor(values[k.id]?.[c] ?? null, k.metaG2, k.metaG6, k.better)}`}
+                                );
+                              }}
+                              className={`w-24 h-8 px-2 pr-6 text-right border rounded focus:outline-none focus:ring-2 focus:ring-input ${getStatusColor(c === "fec_media" ? kpiAverage(k.id) : (values[k.id]?.[c] ?? null), k.metaG2, k.metaG6, k.better)} ${c === "fec_media" ? "bg-slate-50" : ""}`}
                               placeholder="-"
                               step={isPercent ? "0.1" : "0.01"}
                               type="number"
+                              readOnly={c === "fec_media"}
                             />
 
                             {isPercent && (

@@ -11,7 +11,7 @@ export interface ReportData {
 type KpiDef = {
   id: string;
   name: string;
-  group: "offensive" | "defensive";
+  group: "offensive" | "defensive" | "general";
   meta: number;
   better: "higher" | "lower";
 };
@@ -165,6 +165,63 @@ const KPI_DEFS: KpiDef[] = [
     meta: 12,
     better: "lower",
   },
+
+  {
+    id: "intensidade_jogo",
+    name: "Intensidade de Jogo",
+    group: "general",
+    meta: 16,
+    better: "higher",
+  },
+  {
+    id: "duelos_ofensivos_pct",
+    name: "% Duelos Ofensivos",
+    group: "general",
+    meta: 41,
+    better: "higher",
+  },
+  {
+    id: "duelos_defensivos_pct",
+    name: "% Duelos Defensivos",
+    group: "general",
+    meta: 61,
+    better: "higher",
+  },
+  {
+    id: "duelos_aereos_pct",
+    name: "% Duelos Aéreos",
+    group: "general",
+    meta: 47,
+    better: "higher",
+  },
+  {
+    id: "recuperacoes_altas_medias",
+    name: "Recuperações Altas/Médias",
+    group: "general",
+    meta: 44,
+    better: "higher",
+  },
+  {
+    id: "ppda",
+    name: "PPDA",
+    group: "general",
+    meta: 10,
+    better: "higher",
+  },
+  {
+    id: "media_passes_jogo",
+    name: "Média de Passes/ por jogo",
+    group: "general",
+    meta: 395,
+    better: "higher",
+  },
+  {
+    id: "acerto_passes_pct",
+    name: "% Acerto de Passes",
+    group: "general",
+    meta: 83,
+    better: "higher",
+  },
 ];
 
 const extractRoundNumber = (round: string) => {
@@ -251,6 +308,7 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
 
   const offensiveKpis = KPI_DEFS.filter(k => k.group === "offensive");
   const defensiveKpis = KPI_DEFS.filter(k => k.group === "defensive");
+  const generalKpis = KPI_DEFS.filter(k => k.group === "general");
 
   const formatValue = (val: number | null) => {
     if (val === null) return "-";
@@ -353,7 +411,7 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
         .legend-color.green { background: #dcfce7; }
         .legend-color.yellow { background: #fef9c3; }
 
-        .tables { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .tables { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
         .table-wrap { border: 1px solid #d1d5db; border-radius: 8px; overflow: hidden; }
         .table-title { background: #0e4c92; color: white; padding: 10px 12px; font-weight: 700; font-size: 13px; }
         table { width: 100%; border-collapse: collapse; }
@@ -378,7 +436,7 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
       <div class="page">
         <div class="top-bar">
           <div class="title">Relatório de Performance - Fortaleza EC</div>
-          <div class="subtitle">Modelo MatchData | KPIs Ofensivos e Defensivos</div>
+          <div class="subtitle">Modelo MatchData | KPIs Ofensivos, Defensivos e Gerais</div>
         </div>
 
         <div class="meta-grid">
@@ -426,6 +484,21 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
               </thead>
               <tbody>
                 ${buildRows(defensiveKpis)}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-wrap">
+            <div class="table-title">Métricas Gerais</div>
+            <table>
+              <thead>
+                <tr>
+                  <th class="metric-head">Indicador</th>
+                  ${roundNumberHeaders || '<th class="round-col-head">Sem rodada</th>'}
+                </tr>
+              </thead>
+              <tbody>
+                ${buildRows(generalKpis)}
               </tbody>
             </table>
           </div>
