@@ -405,9 +405,18 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
       })
       .join("");
 
-  const buildGeneralMetaRow = (label: string, getter: (kpi: KpiDef) => string) => {
+  const buildGeneralMetaRow = (
+    label: string,
+    getter: (kpi: KpiDef) => number | null,
+    withGoalColor = false
+  ) => {
     const cols = generalKpis
-      .map(kpi => `<td class="value-cell">${getter(kpi)}</td>`)
+      .map(kpi => {
+        const value = getter(kpi);
+        const background = withGoalColor ? ` style="background:${getCellColor(kpi, value)}"` : "";
+
+        return `<td class="value-cell"${background}>${formatValue(value, kpi.name)}</td>`;
+      })
       .join("");
 
     return `<tr><td class="metric-cell">${label}</td>${cols}</tr>`;
@@ -418,12 +427,13 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
     .join("");
 
   const generalRows = [
-    buildGeneralMetaRow("G2", kpi => formatValue(kpi.metaG2, kpi.name)),
-    buildGeneralMetaRow("G6", kpi => formatValue(kpi.metaG6, kpi.name)),
-    buildGeneralMetaRow("FEC MÉDIA", kpi => formatValue(kpiAverage(kpi.id), kpi.name)),
+    buildGeneralMetaRow("G2", kpi => kpi.metaG2),
+    buildGeneralMetaRow("G6", kpi => kpi.metaG6),
+    buildGeneralMetaRow("FEC MÉDIA", kpi => kpiAverage(kpi.id), true),
     buildGeneralMetaRow(
       currentRound ? `RODADA ${extractRoundNumber(currentRound)}` : "RODADA -",
-      kpi => formatValue(getRoundValue(kpi.id), kpi.name)
+      kpi => getRoundValue(kpi.id),
+      true
     ),
   ].join("");
 
