@@ -441,16 +441,17 @@ export default function Dashboard() {
 
     if (better === "higher") {
       if (value >= metaG2)
-        return "bg-green-200 border-green-400 text-green-950";
+        return "bg-green-200 border-green-400 text-green-950 dark:text-green-100";
       if (value >= metaG6)
-        return "bg-yellow-200 border-yellow-400 text-yellow-950";
-      return "bg-yellow-100 border-yellow-300 text-yellow-950";
+        return "bg-yellow-200 border-yellow-400 text-yellow-950 dark:text-yellow-100";
+      return "bg-yellow-100 border-yellow-300 text-yellow-950 dark:text-yellow-100";
     }
 
-    if (value <= metaG2) return "bg-green-200 border-green-400 text-green-950";
+    if (value <= metaG2)
+      return "bg-green-200 border-green-400 text-green-950 dark:text-green-100";
     if (value <= metaG6)
-      return "bg-yellow-200 border-yellow-400 text-yellow-950";
-    return "bg-yellow-100 border-yellow-300 text-yellow-950";
+      return "bg-yellow-200 border-yellow-400 text-yellow-950 dark:text-yellow-100";
+    return "bg-yellow-100 border-yellow-300 text-yellow-950 dark:text-yellow-100";
   };
 
   const getRoundLabel = (roundKey: RoundKey) => {
@@ -461,16 +462,16 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard KPIs</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground dark:text-white">
             Visualização por competição e rodada
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="w-56">
-            <Label>Competição</Label>
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="w-56 space-y-1">
+            <Label className="dark:text-white">Competição</Label>
             <Select
               value={selectedCompetition}
               onValueChange={setSelectedCompetition}
@@ -489,9 +490,9 @@ export default function Dashboard() {
           </div>
 
           {selectedCompetition === "Brasileirão" && (
-            <div className="flex items-end gap-2">
-              <div className="w-44">
-                <Label>Rodada para exportação</Label>
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="w-48 space-y-1">
+                <Label className="dark:text-white">Rodada para exportação</Label>
                 <Select
                   value={selectedExportRound}
                   onValueChange={setSelectedExportRound}
@@ -511,7 +512,7 @@ export default function Dashboard() {
               </div>
               <Button
                 onClick={handleExportReport}
-                className="gap-2"
+                className="h-9 gap-2"
                 disabled={!exportRounds.length}
               >
                 <FileDown className="w-4 h-4" />
@@ -520,7 +521,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          <Button onClick={addRound} variant="outline" className="gap-2">
+          <Button onClick={addRound} variant="outline" className="h-9 gap-2 dark:text-white">
             <PlusCircle className="w-4 h-4" />
             Adicionar Rodada
           </Button>
@@ -541,7 +542,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="p-0 overflow-x-auto">
             <Table>
-              <TableHeader className="bg-gray-50">
+              <TableHeader className="bg-gray-50 dark:bg-white/5">
                 <TableRow>
                   <TableHead>Métrica</TableHead>
                   <TableHead className="text-center">Meta G2</TableHead>
@@ -582,7 +583,7 @@ export default function Dashboard() {
                       : false;
                   const isPercent = /%|posse|pct/.test(k.name.toLowerCase());
                   return (
-                    <TableRow key={k.id} className="hover:bg-gray-50">
+                    <TableRow key={k.id} className="hover:bg-gray-50 dark:hover:bg-white/5">
                       <TableCell className="font-medium">{k.name}</TableCell>
                       <TableCell className="text-center font-semibold">
                         {k.metaG2}
@@ -610,7 +611,7 @@ export default function Dashboard() {
                                     : Number(e.target.value)
                                 );
                               }}
-                              className={`w-24 h-8 px-2 pr-6 text-right border rounded focus:outline-none focus:ring-2 focus:ring-input ${getStatusColor(c === "fec_media" ? kpiAverage(k.id) : (values[k.id]?.[c] ?? null), k.metaG2, k.metaG6, k.better)} ${c === "fec_media" ? "bg-slate-50" : ""}`}
+                              className={`w-24 h-8 px-2 pr-6 text-right border rounded focus:outline-none focus:ring-2 focus:ring-input ${getStatusColor(c === "fec_media" ? kpiAverage(k.id) : (values[k.id]?.[c] ?? null), k.metaG2, k.metaG6, k.better)} ${c === "fec_media" ? "bg-slate-50 dark:bg-slate-800" : ""}`}
                               placeholder="-"
                               step={isPercent ? "0.1" : "0.01"}
                               type="number"
@@ -618,7 +619,7 @@ export default function Dashboard() {
                             />
 
                             {isPercent && (
-                              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground dark:text-white">
                                 %
                               </span>
                             )}
