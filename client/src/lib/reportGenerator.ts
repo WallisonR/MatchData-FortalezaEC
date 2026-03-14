@@ -283,18 +283,30 @@ export async function generatePDFReport(data: ReportData) {
 
   const container = document.createElement("div");
   container.style.position = "absolute";
-  container.style.left = "-9999px";
+  container.style.top = "0";
+  container.style.left = "0";
+  container.style.pointerEvents = "none";
+  container.style.zIndex = "-1";
   container.style.width = "1500px";
   container.style.backgroundColor = "#ffffff";
   container.innerHTML = getReportHTML(data, roundDescription);
   document.body.appendChild(container);
 
   try {
+    const captureWidth = container.scrollWidth;
+    const captureHeight = container.scrollHeight;
+
     const canvas = await html2canvas(container, {
       scale: 2,
       useCORS: true,
       logging: false,
       backgroundColor: "#ffffff",
+      width: captureWidth,
+      height: captureHeight,
+      windowWidth: captureWidth,
+      windowHeight: captureHeight,
+      scrollX: 0,
+      scrollY: 0,
     });
 
     const imgData = canvas.toDataURL("image/png");
@@ -393,9 +405,18 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
       })
       .join("");
 
-  const buildGeneralMetaRow = (label: string, getter: (kpi: KpiDef) => string) => {
+  const buildGeneralMetaRow = (
+    label: string,
+    getter: (kpi: KpiDef) => number | null,
+    withGoalColor = false
+  ) => {
     const cols = generalKpis
-      .map(kpi => `<td class="value-cell">${getter(kpi)}</td>`)
+      .map(kpi => {
+        const value = getter(kpi);
+        const background = withGoalColor ? ` style="background:${getCellColor(kpi, value)}"` : "";
+
+        return `<td class="value-cell"${background}>${formatValue(value, kpi.name)}</td>`;
+      })
       .join("");
 
     return `<tr><td class="metric-cell">${label}</td>${cols}</tr>`;
@@ -406,12 +427,13 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
     .join("");
 
   const generalRows = [
-    buildGeneralMetaRow("G2", kpi => formatValue(kpi.metaG2, kpi.name)),
-    buildGeneralMetaRow("G6", kpi => formatValue(kpi.metaG6, kpi.name)),
-    buildGeneralMetaRow("FEC MÉDIA", kpi => formatValue(kpiAverage(kpi.id), kpi.name)),
+    buildGeneralMetaRow("G2", kpi => kpi.metaG2),
+    buildGeneralMetaRow("G6", kpi => kpi.metaG6),
+    buildGeneralMetaRow("FEC MÉDIA", kpi => kpiAverage(kpi.id), true),
     buildGeneralMetaRow(
       currentRound ? `RODADA ${extractRoundNumber(currentRound)}` : "RODADA -",
-      kpi => formatValue(getRoundValue(kpi.id), kpi.name)
+      kpi => getRoundValue(kpi.id),
+      true
     ),
   ].join("");
 
