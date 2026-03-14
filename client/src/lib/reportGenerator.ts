@@ -284,7 +284,7 @@ export async function generatePDFReport(data: ReportData) {
   const container = document.createElement("div");
   container.style.position = "absolute";
   container.style.left = "-9999px";
-  container.style.width = "1400px";
+  container.style.width = "1500px";
   container.style.backgroundColor = "#ffffff";
   container.innerHTML = getReportHTML(data, roundDescription);
   document.body.appendChild(container);
