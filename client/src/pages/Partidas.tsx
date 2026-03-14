@@ -719,10 +719,10 @@ export default function Partidas() {
     <div className="flex flex-col gap-6 p-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Gerenciador de Partidas
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-white">
             Fortaleza Esporte Clube - Histórico de Jogos
           </p>
         </div>
@@ -812,7 +812,7 @@ export default function Partidas() {
                       })}
                     </SelectContent>
                   </Select>
-                  <div className="text-sm text-gray-600 mt-1">
+                  <div className="text-sm text-gray-600 dark:text-white mt-1">
                     Se nenhuma rodada for selecionada, uma nova rodada será
                     criada ao salvar.
                   </div>
@@ -875,7 +875,7 @@ export default function Partidas() {
                 </div>
               </div>
               <div className="mt-4">
-                <div className="text-sm font-semibold text-gray-700 mb-2">
+                <div className="text-sm font-semibold text-gray-700 dark:text-white mb-2">
                   Estatísticas da Partida
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -934,7 +934,7 @@ export default function Partidas() {
                   </div>
                 </div>
 
-                <div className="text-sm font-semibold text-gray-700 mb-2 mt-4">
+                <div className="text-sm font-semibold text-gray-700 dark:text-white mb-2 mt-4">
                   KPIs adicionais (preencha se souber)
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1175,12 +1175,12 @@ export default function Partidas() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-white">
               Partidas
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">
+            <div className="text-3xl font-bold text-gray-900 dark:text-white">
               {totalMatches}
             </div>
           </CardContent>
@@ -1241,7 +1241,7 @@ export default function Partidas() {
         </CardHeader>
         <CardContent className="p-0 overflow-x-auto">
           <Table>
-            <TableHeader className="bg-gray-50">
+            <TableHeader className="bg-gray-50 dark:bg-white/5">
               <TableRow>
                 <TableHead>Data</TableHead>
                 <TableHead>Adversário</TableHead>
@@ -1258,12 +1258,12 @@ export default function Partidas() {
                   "pt-BR"
                 );
                 return (
-                  <TableRow key={match.id} className="hover:bg-gray-50">
+                  <TableRow key={match.id} className="hover:bg-gray-50 dark:hover:bg-white/5">
                     <TableCell>{matchDate}</TableCell>
                     <TableCell className="font-medium">
                       {match.opponent}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-600">
+                    <TableCell className="text-sm text-gray-600 dark:text-white">
                       {match.competition}
                     </TableCell>
                     <TableCell className="text-center font-bold">
@@ -1323,7 +1323,7 @@ export default function Partidas() {
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <div className="text-sm text-gray-600 mb-1">
+                      <div className="text-sm text-gray-600 dark:text-white mb-1">
                         Posse de Bola
                       </div>
                       <div className="text-2xl font-bold text-blue-600">
@@ -1335,7 +1335,7 @@ export default function Partidas() {
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <div className="text-sm text-gray-600 mb-1">
+                      <div className="text-sm text-gray-600 dark:text-white mb-1">
                         Acurácia de Passes
                       </div>
                       <div className="text-2xl font-bold text-green-600">
@@ -1348,7 +1348,7 @@ export default function Partidas() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm font-semibold text-gray-700 mb-2">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-white mb-2">
                     Finalizações
                   </div>
                   <div className="space-y-1 text-sm">
@@ -1357,7 +1357,7 @@ export default function Partidas() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-gray-700 mb-2">
+                  <div className="text-sm font-semibold text-gray-700 dark:text-white mb-2">
                     Passes
                   </div>
                   <div className="space-y-1 text-sm">
