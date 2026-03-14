@@ -11,8 +11,9 @@ export interface ReportData {
 type KpiDef = {
   id: string;
   name: string;
-  group: "offensive" | "defensive";
-  meta: number;
+  group: "offensive" | "defensive" | "general";
+  metaG2: number;
+  metaG6: number;
   better: "higher" | "lower";
 };
 
@@ -20,150 +21,235 @@ const KPI_DEFS: KpiDef[] = [
   {
     id: "pontos",
     name: "Pontos",
+    metaG2: 65,
+    metaG6: 61,
     group: "offensive",
-    meta: 65,
     better: "higher",
   },
   {
     id: "media_gols",
     name: "Média de Gols",
+    metaG2: 1.23,
+    metaG6: 1.24,
     group: "offensive",
-    meta: 1.23,
     better: "higher",
   },
   {
     id: "xg",
     name: "XG (Expected Goals)",
+    metaG2: 1.3,
+    metaG6: 1.33,
     group: "offensive",
-    meta: 1.3,
     better: "higher",
   },
   {
     id: "posse",
     name: "Posse %",
+    metaG2: 51,
+    metaG6: 50,
     group: "offensive",
-    meta: 51,
     better: "higher",
   },
   {
     id: "pct_jogos_marcou",
     name: "% de jogos que marcou",
+    metaG2: 76,
+    metaG6: 72,
     group: "offensive",
-    meta: 76,
     better: "higher",
   },
   {
     id: "finalizacoes",
     name: "Finalização/90min",
+    metaG2: 12,
+    metaG6: 12,
     group: "offensive",
-    meta: 12,
     better: "higher",
   },
   {
     id: "pct_final_certa",
     name: "% Finalização Certa/90min",
+    metaG2: 35,
+    metaG6: 33,
     group: "offensive",
-    meta: 35,
     better: "higher",
   },
   {
     id: "final_dentro",
     name: "Finalização de Dentro da área/90min",
+    metaG2: 8,
+    metaG6: 6.2,
     group: "offensive",
-    meta: 8,
     better: "higher",
   },
   {
     id: "pct_cruzamentos_acerto",
     name: "Cruzamentos % Acerto",
+    metaG2: 34,
+    metaG6: 35,
     group: "offensive",
-    meta: 34,
     better: "higher",
   },
   {
     id: "entradas_area_90",
     name: "Entradas da Área /90min",
+    metaG2: 22,
+    metaG6: 21,
     group: "offensive",
-    meta: 22,
     better: "higher",
   },
   {
     id: "toques_area_90",
     name: "Toques na Área /90min",
+    metaG2: 15,
+    metaG6: 15,
     group: "offensive",
-    meta: 15,
     better: "higher",
   },
 
   {
     id: "media_gols_sofridos",
     name: "Média de Gols Sofridos",
+    metaG2: 0.88,
+    metaG6: 0.92,
     group: "defensive",
-    meta: 0.88,
     better: "lower",
   },
   {
     id: "xg_contra",
     name: "XG Contra",
+    metaG2: 0.97,
+    metaG6: 1.1,
     group: "defensive",
-    meta: 0.97,
     better: "lower",
   },
   {
     id: "posse_contra",
     name: "Posse Contra",
+    metaG2: 49,
+    metaG6: 50,
     group: "defensive",
-    meta: 49,
     better: "lower",
   },
   {
     id: "pct_nao_sofreu",
     name: "% de jogos que não sofreu gols",
+    metaG2: 45,
+    metaG6: 38,
     group: "defensive",
-    meta: 45,
     better: "higher",
   },
   {
     id: "final_sofrida",
     name: "Finalização Sofrida/90min",
+    metaG2: 11,
+    metaG6: 12,
     group: "defensive",
-    meta: 11,
     better: "lower",
   },
   {
     id: "pct_final_certa_sofrida",
-    name: "% Finalização Certa Sofrida/90min",
+    name: "% Finalização CertaSofrida/90min",
+    metaG2: 32,
+    metaG6: 31,
     group: "defensive",
-    meta: 32,
     better: "lower",
   },
   {
     id: "final_dentro_sofrida",
     name: "Finalização de Dentro da área Sofrida/90min",
+    metaG2: 6,
+    metaG6: 6,
     group: "defensive",
-    meta: 6,
     better: "lower",
   },
   {
     id: "pct_cruzamentos_acerto_sofridos",
     name: "Cruzamentos % Acerto Sofridos",
+    metaG2: 31,
+    metaG6: 34,
     group: "defensive",
-    meta: 31,
     better: "lower",
   },
   {
     id: "entradas_area_sofrida_90",
     name: "Entradas da Área Sofrida /90min",
+    metaG2: 19,
+    metaG6: 18,
     group: "defensive",
-    meta: 19,
     better: "lower",
   },
   {
     id: "toques_area_sofridos_90",
     name: "Toques na Área Sofridos /90min",
+    metaG2: 12,
+    metaG6: 13,
     group: "defensive",
-    meta: 12,
     better: "lower",
+  },
+  {
+    id: "intensidade_jogo",
+    name: "Intensidade de Jogo",
+    metaG2: 16,
+    metaG6: 15,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "duelos_ofensivos_pct",
+    name: "% Duelos Ofensivos",
+    metaG2: 41,
+    metaG6: 42,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "duelos_defensivos_pct",
+    name: "% Duelos Defensivos",
+    metaG2: 61,
+    metaG6: 59,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "duelos_aereos_pct",
+    name: "% Duelos Aéreos",
+    metaG2: 47,
+    metaG6: 46,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "recuperacoes_altas_medias",
+    name: "Recuperações Altas/Médias",
+    metaG2: 44,
+    metaG6: 42,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "ppda",
+    name: "PPDA",
+    metaG2: 10,
+    metaG6: 10,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "media_passes_jogo",
+    name: "Média de Passes/ por jogo",
+    metaG2: 395,
+    metaG6: 374,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "acerto_passes_pct",
+    name: "% Acerto de Passes",
+    metaG2: 83,
+    metaG6: 82,
+    group: "general",
+    better: "higher",
   },
 ];
 
@@ -248,42 +334,86 @@ export async function generatePDFReport(data: ReportData) {
 function getReportHTML(data: ReportData, roundDescription: string): string {
   const { rounds, values, seasonYear, competition } = data;
   const displayRounds = getDisplayRounds(rounds);
+  const currentRound = displayRounds[displayRounds.length - 1] ?? null;
 
   const offensiveKpis = KPI_DEFS.filter(k => k.group === "offensive");
   const defensiveKpis = KPI_DEFS.filter(k => k.group === "defensive");
+  const generalKpis = KPI_DEFS.filter(k => k.group === "general");
 
-  const formatValue = (val: number | null) => {
+  const kpiAverage = (kpiId: string) => {
+    const numeric = displayRounds
+      .map(round => values[kpiId]?.[round])
+      .filter((val): val is number => val != null);
+
+    if (numeric.length === 0) return null;
+    return numeric.reduce((acc, val) => acc + val, 0) / numeric.length;
+  };
+
+  const getRoundValue = (kpiId: string) => {
+    if (!currentRound) return null;
+    return values[kpiId]?.[currentRound] ?? null;
+  };
+
+  const formatValue = (val: number | null, metricName?: string) => {
     if (val === null) return "-";
-    return val % 1 !== 0 ? val.toFixed(2) : val.toString();
+    const isPercentMetric = metricName
+      ? /%|posse|pct|duelos|acerto/i.test(metricName)
+      : false;
+    const formatted = val % 1 !== 0 ? val.toFixed(2) : val.toString();
+    return isPercentMetric ? `${formatted}%` : formatted;
   };
 
   const getCellColor = (kpi: KpiDef, val: number | null) => {
     if (val === null) return "#ffffff";
-    const onTarget =
-      kpi.better === "higher" ? val >= kpi.meta : val <= kpi.meta;
-    return onTarget ? "#dcfce7" : "#fef9c3";
+
+    if (kpi.better === "higher") {
+      if (val >= kpi.metaG2) return "#dcfce7";
+      if (val >= kpi.metaG6) return "#fef9c3";
+      return "#fef3c7";
+    }
+
+    if (val <= kpi.metaG2) return "#dcfce7";
+    if (val <= kpi.metaG6) return "#fef9c3";
+    return "#fef3c7";
   };
 
-  const roundNumberHeaders = displayRounds
-    .map(round => `<td class="round-col">${extractRoundNumber(round)}</td>`)
-    .join("");
-
-  const buildRows = (list: KpiDef[]) =>
+  const buildMainRows = (list: KpiDef[]) =>
     list
       .map(kpi => {
-        const cells = displayRounds
-          .map(round => {
-            const val = values[kpi.id]?.[round] ?? null;
-            return `<td class="value-cell" style="background:${getCellColor(kpi, val)}">${formatValue(val)}</td>`;
-          })
-          .join("");
+        const avg = kpiAverage(kpi.id);
+        const roundVal = getRoundValue(kpi.id);
 
         return `<tr>
           <td class="metric-cell">${kpi.name}</td>
-          ${cells}
+          <td class="meta-cell">${formatValue(kpi.metaG2, kpi.name)}</td>
+          <td class="meta-cell">${formatValue(kpi.metaG6, kpi.name)}</td>
+          <td class="value-cell" style="background:${getCellColor(kpi, avg)}">${formatValue(avg, kpi.name)}</td>
+          <td class="value-cell" style="background:${getCellColor(kpi, roundVal)}">${formatValue(roundVal, kpi.name)}</td>
         </tr>`;
       })
       .join("");
+
+  const buildGeneralMetaRow = (label: string, getter: (kpi: KpiDef) => string) => {
+    const cols = generalKpis
+      .map(kpi => `<td class="value-cell">${getter(kpi)}</td>`)
+      .join("");
+
+    return `<tr><td class="metric-cell">${label}</td>${cols}</tr>`;
+  };
+
+  const generalHeaderCols = generalKpis
+    .map(kpi => `<th class="general-head">${kpi.name}</th>`)
+    .join("");
+
+  const generalRows = [
+    buildGeneralMetaRow("G2", kpi => formatValue(kpi.metaG2, kpi.name)),
+    buildGeneralMetaRow("G6", kpi => formatValue(kpi.metaG6, kpi.name)),
+    buildGeneralMetaRow("FEC MÉDIA", kpi => formatValue(kpiAverage(kpi.id), kpi.name)),
+    buildGeneralMetaRow(
+      currentRound ? `RODADA ${extractRoundNumber(currentRound)}` : "RODADA -",
+      kpi => formatValue(getRoundValue(kpi.id), kpi.name)
+    ),
+  ].join("");
 
   const legend = `
     <div class="legend">
@@ -300,75 +430,78 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
       <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, sans-serif; background: #fff; color: #111827; }
-        .page { width: 1400px; padding: 24px 28px; }
+        .page { width: 1500px; padding: 20px 24px; }
 
         .top-bar {
           background: linear-gradient(90deg, #0e4c92 0%, #0e4c92 72%, #e31e24 72%, #e31e24 100%);
           color: #fff;
           border-radius: 10px;
-          padding: 18px 20px;
-          margin-bottom: 14px;
+          padding: 14px 18px;
+          margin-bottom: 12px;
         }
 
-        .title { font-size: 28px; font-weight: 700; }
-        .subtitle { font-size: 15px; margin-top: 6px; opacity: 0.95; }
+        .title { font-size: 24px; font-weight: 700; }
+        .subtitle { font-size: 14px; margin-top: 4px; opacity: 0.95; }
 
         .meta-grid {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 10px;
-          margin-bottom: 14px;
+          margin-bottom: 12px;
         }
 
         .meta-card {
           border: 1px solid #dbe3ef;
           border-radius: 8px;
-          padding: 10px 12px;
+          padding: 8px 10px;
           background: #f8fafc;
         }
 
-        .meta-label { font-size: 11px; color: #4b5563; text-transform: uppercase; letter-spacing: 0.4px; }
-        .meta-value { margin-top: 4px; font-size: 15px; font-weight: 700; color: #0e4c92; }
+        .meta-label { font-size: 10px; color: #4b5563; text-transform: uppercase; letter-spacing: 0.4px; }
+        .meta-value { margin-top: 3px; font-size: 14px; font-weight: 700; color: #0e4c92; }
 
         .round-description {
           border-left: 4px solid #e31e24;
           background: #fff7f7;
           color: #991b1b;
-          padding: 10px 12px;
+          padding: 8px 10px;
           border-radius: 6px;
           font-weight: 600;
-          margin-bottom: 14px;
+          margin-bottom: 10px;
+          font-size: 12px;
         }
 
         .legend {
           display: flex;
           gap: 20px;
           align-items: center;
-          margin: 6px 0 16px;
-          font-size: 12px;
+          margin: 4px 0 10px;
+          font-size: 11px;
         }
 
         .legend-item { display: flex; align-items: center; gap: 8px; }
-        .legend-color { width: 14px; height: 14px; border-radius: 3px; border: 1px solid #cbd5e1; }
+        .legend-color { width: 12px; height: 12px; border-radius: 3px; border: 1px solid #cbd5e1; }
         .legend-color.green { background: #dcfce7; }
         .legend-color.yellow { background: #fef9c3; }
 
-        .tables { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .tables-main { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
         .table-wrap { border: 1px solid #d1d5db; border-radius: 8px; overflow: hidden; }
-        .table-title { background: #0e4c92; color: white; padding: 10px 12px; font-weight: 700; font-size: 13px; }
+        .table-title { background: #0e4c92; color: white; padding: 8px 10px; font-weight: 700; font-size: 12px; }
         table { width: 100%; border-collapse: collapse; }
-        thead tr { background: #0e4c92; color: white; }
+        thead tr { background: #f3f4f6; color: #111827; }
         th, td { border: 1px solid #e5e7eb; }
-        th { padding: 7px 6px; font-size: 11px; text-align: center; }
-        .metric-head { text-align: left; width: 54%; }
-        .round-col-head { width: 46%; }
-        .metric-cell { font-size: 12px; padding: 7px 8px; font-weight: 600; }
-        .value-cell { font-size: 12px; text-align: center; padding: 7px 4px; }
-        .round-col { font-size: 11px; text-align: center; padding: 7px 3px; font-weight: 700; }
+        th { padding: 6px 4px; font-size: 10px; text-align: center; font-weight: 700; }
+        .metric-head { text-align: left; min-width: 160px; }
+        .metric-cell { font-size: 11px; padding: 6px 6px; font-weight: 600; }
+        .meta-cell { font-size: 11px; padding: 6px 4px; text-align: center; font-weight: 700; }
+        .value-cell { font-size: 11px; text-align: center; padding: 6px 4px; }
+
+        .general-wrap { border: 1px solid #d1d5db; border-radius: 8px; overflow: hidden; }
+        .general-head { font-size: 10px; min-width: 120px; }
 
         .footer {
-          margin-top: 14px;
-          font-size: 11px;
+          margin-top: 10px;
+          font-size: 10px;
           color: #4b5563;
           text-align: right;
         }
@@ -378,7 +511,7 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
       <div class="page">
         <div class="top-bar">
           <div class="title">Relatório de Performance - Fortaleza EC</div>
-          <div class="subtitle">Modelo MatchData | KPIs Ofensivos e Defensivos</div>
+          <div class="subtitle">Modelo MatchData | KPIs Ofensivos, Defensivos e Gerais</div>
         </div>
 
         <div class="meta-grid">
@@ -391,26 +524,29 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
             <div class="meta-value">${seasonYear}</div>
           </div>
           <div class="meta-card">
-            <div class="meta-label">Rodadas no relatório</div>
-            <div class="meta-value">${displayRounds.map(extractRoundNumber).join(", ") || "-"}</div>
+            <div class="meta-label">Rodada atual no relatório</div>
+            <div class="meta-value">${currentRound ? extractRoundNumber(currentRound) : "-"}</div>
           </div>
         </div>
 
         <div class="round-description">${roundDescription}</div>
         ${legend}
 
-        <div class="tables">
+        <div class="tables-main">
           <div class="table-wrap">
             <div class="table-title">Métricas Ofensivas</div>
             <table>
               <thead>
                 <tr>
-                  <th class="metric-head">Indicador</th>
-                  ${roundNumberHeaders || '<th class="round-col-head">Sem rodada</th>'}
+                  <th class="metric-head">Ofensivo</th>
+                  <th>Meta G2</th>
+                  <th>Meta G6</th>
+                  <th>FEC MÉDIA</th>
+                  <th>${currentRound ? `RODADA ${extractRoundNumber(currentRound)}` : "RODADA -"}</th>
                 </tr>
               </thead>
               <tbody>
-                ${buildRows(offensiveKpis)}
+                ${buildMainRows(offensiveKpis)}
               </tbody>
             </table>
           </div>
@@ -420,15 +556,33 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
             <table>
               <thead>
                 <tr>
-                  <th class="metric-head">Indicador</th>
-                  ${roundNumberHeaders || '<th class="round-col-head">Sem rodada</th>'}
+                  <th class="metric-head">Defensivo</th>
+                  <th>Meta G2</th>
+                  <th>Meta G6</th>
+                  <th>FEC MÉDIA</th>
+                  <th>${currentRound ? `RODADA ${extractRoundNumber(currentRound)}` : "RODADA -"}</th>
                 </tr>
               </thead>
               <tbody>
-                ${buildRows(defensiveKpis)}
+                ${buildMainRows(defensiveKpis)}
               </tbody>
             </table>
           </div>
+        </div>
+
+        <div class="general-wrap">
+          <div class="table-title">KPIs Gerais (horizontal)</div>
+          <table>
+            <thead>
+              <tr>
+                <th class="metric-head">Base</th>
+                ${generalHeaderCols}
+              </tr>
+            </thead>
+            <tbody>
+              ${generalRows}
+            </tbody>
+          </table>
         </div>
 
         <div class="footer">FONTE: MATCHDATA | Gerado em ${new Date().toLocaleDateString("pt-BR")}</div>
