@@ -441,17 +441,17 @@ export default function Dashboard() {
 
     if (better === "higher") {
       if (value >= metaG2)
-        return "bg-green-200 border-green-400 text-green-950 dark:text-green-100";
+        return "bg-green-200 border-green-400 text-green-950 dark:text-green-950";
       if (value >= metaG6)
-        return "bg-yellow-200 border-yellow-400 text-yellow-950 dark:text-yellow-100";
-      return "bg-yellow-100 border-yellow-300 text-yellow-950 dark:text-yellow-100";
+        return "bg-yellow-200 border-yellow-400 text-yellow-950 dark:text-yellow-950";
+      return "bg-yellow-100 border-yellow-300 text-yellow-950 dark:text-yellow-950";
     }
 
     if (value <= metaG2)
-      return "bg-green-200 border-green-400 text-green-950 dark:text-green-100";
+      return "bg-green-200 border-green-400 text-green-950 dark:text-green-950";
     if (value <= metaG6)
-      return "bg-yellow-200 border-yellow-400 text-yellow-950 dark:text-yellow-100";
-    return "bg-yellow-100 border-yellow-300 text-yellow-950 dark:text-yellow-100";
+      return "bg-yellow-200 border-yellow-400 text-yellow-950 dark:text-yellow-950";
+    return "bg-yellow-100 border-yellow-300 text-yellow-950 dark:text-yellow-950";
   };
 
   const getRoundLabel = (roundKey: RoundKey) => {
@@ -611,7 +611,7 @@ export default function Dashboard() {
                                     : Number(e.target.value)
                                 );
                               }}
-                              className={`w-24 h-8 px-2 pr-6 text-right border rounded focus:outline-none focus:ring-2 focus:ring-input ${getStatusColor(c === "fec_media" ? kpiAverage(k.id) : (values[k.id]?.[c] ?? null), k.metaG2, k.metaG6, k.better)} ${c === "fec_media" ? "bg-slate-50 dark:bg-slate-800" : ""}`}
+                              className={`w-24 h-8 px-2 pr-6 text-right border rounded focus:outline-none focus:ring-2 focus:ring-input placeholder:text-slate-500 ${getStatusColor(c === "fec_media" ? kpiAverage(k.id) : (values[k.id]?.[c] ?? null), k.metaG2, k.metaG6, k.better)} ${c === "fec_media" ? "bg-slate-50 dark:bg-slate-800 dark:text-white" : ""}`}
                               placeholder="-"
                               step={isPercent ? "0.1" : "0.01"}
                               type="number"
@@ -619,7 +619,7 @@ export default function Dashboard() {
                             />
 
                             {isPercent && (
-                              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-muted-foreground dark:text-white">
+                              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-current">
                                 %
                               </span>
                             )}
