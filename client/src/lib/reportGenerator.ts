@@ -604,21 +604,6 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
               </tbody>
             </table>
           </div>
-
-          <div class="table-wrap">
-            <div class="table-title">Métricas Gerais</div>
-            <table>
-              <thead>
-                <tr>
-                  <th class="metric-head">Indicador</th>
-                  ${roundNumberHeaders || '<th class="round-col-head">Sem rodada</th>'}
-                </tr>
-              </thead>
-              <tbody>
-                ${buildRows(generalKpis)}
-              </tbody>
-            </table>
-          </div>
         </div>
 
         <div class="general-wrap">

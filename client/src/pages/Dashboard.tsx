@@ -411,17 +411,24 @@ export default function Dashboard() {
   const exportRounds = rounds.filter(r => r !== "fec_media");
 
   const handleExportReport = async () => {
-    const roundsToExport =
-      selectedExportRound === "all"
-        ? rounds
-        : ["fec_media", selectedExportRound].filter(Boolean);
+    try {
+      const roundsToExport =
+        selectedExportRound === "all"
+          ? rounds
+          : ["fec_media", selectedExportRound].filter(Boolean);
 
-    await generatePDFReport({
-      rounds: roundsToExport,
-      values,
-      seasonYear: new Date().getFullYear(),
-      competition: selectedCompetition,
-    });
+      await generatePDFReport({
+        rounds: roundsToExport,
+        values,
+        seasonYear: new Date().getFullYear(),
+        competition: selectedCompetition,
+      });
+    } catch (error) {
+      console.error("Falha ao exportar relatório:", error);
+      window.alert(
+        "Não foi possível exportar o relatório. Atualize a página e tente novamente."
+      );
+    }
   };
 
   const getStatusColor = (
