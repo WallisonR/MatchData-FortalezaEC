@@ -363,26 +363,6 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
     return isPercentMetric ? `${formatted}%` : formatted;
   };
 
-  const calcAchievement = (
-    value: number | null,
-    meta: number,
-    better: "higher" | "lower"
-  ) => {
-    if (value === null || meta === 0) return null;
-    if (better === "lower" && value === 0) return null;
-
-    if (better === "higher") {
-      return (value / meta) * 100;
-    }
-
-    return (meta / value) * 100;
-  };
-
-  const formatAchievement = (value: number | null) => {
-    if (value === null || !Number.isFinite(value)) return "-";
-    return `${Math.round(value)}%`;
-  };
-
   const getCellColor = (kpi: KpiDef, val: number | null) => {
     if (val === null) return "#ffffff";
 
@@ -402,8 +382,6 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
       .map(kpi => {
         const avg = kpiAverage(kpi.id);
         const roundVal = getRoundValue(kpi.id);
-        const g2Pct = calcAchievement(roundVal, kpi.metaG2, kpi.better);
-        const g6Pct = calcAchievement(roundVal, kpi.metaG6, kpi.better);
 
         return `<tr>
           <td class="metric-cell">${kpi.name}</td>
@@ -411,8 +389,6 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
           <td class="meta-cell">${formatValue(kpi.metaG6, kpi.name)}</td>
           <td class="value-cell" style="background:${getCellColor(kpi, avg)}">${formatValue(avg, kpi.name)}</td>
           <td class="value-cell" style="background:${getCellColor(kpi, roundVal)}">${formatValue(roundVal, kpi.name)}</td>
-          <td class="value-cell">${formatAchievement(g2Pct)}</td>
-          <td class="value-cell">${formatAchievement(g6Pct)}</td>
         </tr>`;
       })
       .join("");
@@ -436,14 +412,6 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
     buildGeneralMetaRow(
       currentRound ? `RODADA ${extractRoundNumber(currentRound)}` : "RODADA -",
       kpi => formatValue(getRoundValue(kpi.id), kpi.name)
-    ),
-    buildGeneralMetaRow(
-      "% G2",
-      kpi => formatAchievement(calcAchievement(getRoundValue(kpi.id), kpi.metaG2, kpi.better))
-    ),
-    buildGeneralMetaRow(
-      "% G6",
-      kpi => formatAchievement(calcAchievement(getRoundValue(kpi.id), kpi.metaG6, kpi.better))
     ),
   ].join("");
 
@@ -575,8 +543,6 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
                   <th>Meta G6</th>
                   <th>FEC MÉDIA</th>
                   <th>${currentRound ? `RODADA ${extractRoundNumber(currentRound)}` : "RODADA -"}</th>
-                  <th>% G2</th>
-                  <th>% G6</th>
                 </tr>
               </thead>
               <tbody>
@@ -595,8 +561,6 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
                   <th>Meta G6</th>
                   <th>FEC MÉDIA</th>
                   <th>${currentRound ? `RODADA ${extractRoundNumber(currentRound)}` : "RODADA -"}</th>
-                  <th>% G2</th>
-                  <th>% G6</th>
                 </tr>
               </thead>
               <tbody>
@@ -607,7 +571,7 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
         </div>
 
         <div class="general-wrap">
-          <div class="table-title">KPIs Gerais (vertical)</div>
+          <div class="table-title">KPIs Gerais (horizontal)</div>
           <table>
             <thead>
               <tr>
