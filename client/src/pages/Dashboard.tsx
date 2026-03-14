@@ -206,6 +206,70 @@ const KPI_DEFS: KpiDef[] = [
     group: "defensive",
     better: "lower",
   },
+  {
+    id: "intensidade_jogo",
+    name: "Intensidade de Jogo",
+    metaG2: 16,
+    metaG6: 15,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "duelos_ofensivos_pct",
+    name: "% Duelos Ofensivos",
+    metaG2: 41,
+    metaG6: 42,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "duelos_defensivos_pct",
+    name: "% Duelos Defensivos",
+    metaG2: 61,
+    metaG6: 59,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "duelos_aereos_pct",
+    name: "% Duelos Aéreos",
+    metaG2: 47,
+    metaG6: 46,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "recuperacoes_altas_medias",
+    name: "Recuperações Altas/Médias",
+    metaG2: 44,
+    metaG6: 42,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "ppda",
+    name: "PPDA",
+    metaG2: 10,
+    metaG6: 10,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "media_passes_jogo",
+    name: "Média de Passes/ por jogo",
+    metaG2: 395,
+    metaG6: 374,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "acerto_passes_pct",
+    name: "% Acerto de Passes",
+    metaG2: 83,
+    metaG6: 82,
+    group: "general",
+    better: "higher",
+  },
 ];
 
 type RoundKey = string;
@@ -382,6 +446,12 @@ export default function Dashboard() {
     return "bg-yellow-100 border-yellow-300 text-yellow-950";
   };
 
+  const getRoundLabel = (roundKey: RoundKey) => {
+    if (roundKey === "fec_media") return "FEC MÉDIA";
+    const numberPart = roundKey.replace(/^r/i, "");
+    return `RODADA ${numberPart}`;
+  };
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
@@ -453,6 +523,7 @@ export default function Dashboard() {
       {[
         { title: "KPIs Ofensivos", data: groups.offensive },
         { title: "KPIs Defensivos", data: groups.defensive },
+        { title: "KPIs Gerais", data: groups.general },
       ].map(group => (
         <Card key={group.title}>
           <CardHeader>
@@ -470,7 +541,7 @@ export default function Dashboard() {
                   <TableHead className="text-center">Meta G6</TableHead>
                   {rounds.map(c => (
                     <TableHead key={c} className="text-center">
-                      {c === "fec_media" ? "FEC MÉDIA" : c.toUpperCase()}
+                      {getRoundLabel(c)}
                       {c !== "fec_media" && (
                         <button
                           title="Remover rodada"
