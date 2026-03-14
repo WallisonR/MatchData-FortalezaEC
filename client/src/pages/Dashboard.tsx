@@ -206,6 +206,70 @@ const KPI_DEFS: KpiDef[] = [
     group: "defensive",
     better: "lower",
   },
+  {
+    id: "intensidade_jogo",
+    name: "Intensidade de Jogo",
+    metaG2: 16,
+    metaG6: 15,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "duelos_ofensivos_pct",
+    name: "% Duelos Ofensivos",
+    metaG2: 41,
+    metaG6: 42,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "duelos_defensivos_pct",
+    name: "% Duelos Defensivos",
+    metaG2: 61,
+    metaG6: 59,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "duelos_aereos_pct",
+    name: "% Duelos Aéreos",
+    metaG2: 47,
+    metaG6: 46,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "recuperacoes_altas_medias",
+    name: "Recuperações Altas/Médias",
+    metaG2: 44,
+    metaG6: 42,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "ppda",
+    name: "PPDA",
+    metaG2: 10,
+    metaG6: 10,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "media_passes_jogo",
+    name: "Média de Passes/ por jogo",
+    metaG2: 395,
+    metaG6: 374,
+    group: "general",
+    better: "higher",
+  },
+  {
+    id: "acerto_passes_pct",
+    name: "% Acerto de Passes",
+    metaG2: 83,
+    metaG6: 82,
+    group: "general",
+    better: "higher",
+  },
 ];
 
 type RoundKey = string;
@@ -327,11 +391,11 @@ export default function Dashboard() {
 
   const kpiAverage = (kpiId: string) => {
     const row = values[kpiId] || {};
-    const numeric: number[] = [];
-    rounds.forEach(c => {
-      const val = row[c];
-      if (val != null) numeric.push(val);
-    });
+    const numeric = rounds
+      .filter(round => round !== "fec_media")
+      .map(round => row[round])
+      .filter((val): val is number => val != null);
+
     if (numeric.length === 0) return null;
     return numeric.reduce((a, b) => a + b, 0) / numeric.length;
   };
@@ -347,17 +411,24 @@ export default function Dashboard() {
   const exportRounds = rounds.filter(r => r !== "fec_media");
 
   const handleExportReport = async () => {
-    const roundsToExport =
-      selectedExportRound === "all"
-        ? rounds
-        : ["fec_media", selectedExportRound].filter(Boolean);
+    try {
+      const roundsToExport =
+        selectedExportRound === "all"
+          ? rounds
+          : ["fec_media", selectedExportRound].filter(Boolean);
 
-    await generatePDFReport({
-      rounds: roundsToExport,
-      values,
-      seasonYear: new Date().getFullYear(),
-      competition: selectedCompetition,
-    });
+      await generatePDFReport({
+        rounds: roundsToExport,
+        values,
+        seasonYear: new Date().getFullYear(),
+        competition: selectedCompetition,
+      });
+    } catch (error) {
+      console.error("Falha ao exportar relatório:", error);
+      window.alert(
+        "Não foi possível exportar o relatório. Atualize a página e tente novamente."
+      );
+    }
   };
 
   const getStatusColor = (
@@ -380,6 +451,12 @@ export default function Dashboard() {
     if (value <= metaG6)
       return "bg-yellow-200 border-yellow-400 text-yellow-950";
     return "bg-yellow-100 border-yellow-300 text-yellow-950";
+  };
+
+  const getRoundLabel = (roundKey: RoundKey) => {
+    if (roundKey === "fec_media") return "FEC MÉDIA";
+    const numberPart = roundKey.replace(/^r/i, "");
+    return `RODADA ${numberPart}`;
   };
 
   return (
@@ -453,6 +530,7 @@ export default function Dashboard() {
       {[
         { title: "KPIs Ofensivos", data: groups.offensive },
         { title: "KPIs Defensivos", data: groups.defensive },
+        { title: "KPIs Gerais", data: groups.general },
       ].map(group => (
         <Card key={group.title}>
           <CardHeader>
@@ -470,7 +548,7 @@ export default function Dashboard() {
                   <TableHead className="text-center">Meta G6</TableHead>
                   {rounds.map(c => (
                     <TableHead key={c} className="text-center">
-                      {c === "fec_media" ? "FEC MÉDIA" : c.toUpperCase()}
+                      {getRoundLabel(c)}
                       {c !== "fec_media" && (
                         <button
                           title="Remover rodada"
@@ -517,20 +595,26 @@ export default function Dashboard() {
                           <div className="relative flex justify-center">
                             <input
                               inputMode="numeric"
-                              value={values[k.id]?.[c] ?? ""}
-                              onChange={e =>
+                              value={
+                                c === "fec_media"
+                                  ? (kpiAverage(k.id) ?? "")
+                                  : (values[k.id]?.[c] ?? "")
+                              }
+                              onChange={e => {
+                                if (c === "fec_media") return;
                                 setCell(
                                   k.id,
                                   c,
                                   e.target.value === ""
                                     ? null
                                     : Number(e.target.value)
-                                )
-                              }
-                              className={`w-24 h-8 px-2 pr-6 text-right border rounded focus:outline-none focus:ring-2 focus:ring-input ${getStatusColor(values[k.id]?.[c] ?? null, k.metaG2, k.metaG6, k.better)}`}
+                                );
+                              }}
+                              className={`w-24 h-8 px-2 pr-6 text-right border rounded focus:outline-none focus:ring-2 focus:ring-input ${getStatusColor(c === "fec_media" ? kpiAverage(k.id) : (values[k.id]?.[c] ?? null), k.metaG2, k.metaG6, k.better)} ${c === "fec_media" ? "bg-slate-50" : ""}`}
                               placeholder="-"
                               step={isPercent ? "0.1" : "0.01"}
                               type="number"
+                              readOnly={c === "fec_media"}
                             />
 
                             {isPercent && (
