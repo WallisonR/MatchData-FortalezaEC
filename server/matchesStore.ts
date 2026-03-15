@@ -252,6 +252,15 @@ export async function getUserByEmail(email: string): Promise<AuthUser | null> {
   return rows[0] ?? null;
 }
 
+export async function updateUserPassword(userId: number, passwordHash: string): Promise<void> {
+  if (!neonEnabled()) {
+    throw new Error("Neon database is required for user management");
+  }
+
+  await ensureNeonTable();
+  await neonQuery("UPDATE users SET password = $1 WHERE id = $2", [passwordHash, userId]);
+}
+
 export async function ensureUser(email: string, passwordHash: string): Promise<AuthUser> {
   const existing = await getUserByEmail(email);
   if (existing) return existing;

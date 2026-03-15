@@ -28,7 +28,13 @@ function hashPassword(password: string) {
 
 function verifyPassword(password: string, stored: string) {
   const [algorithm, salt, hash] = stored.split(":");
-  if (algorithm !== "scrypt" || !salt || !hash) return false;
+
+  // Compatibilidade com usuários legados salvos em texto puro.
+  if (!algorithm || !salt || !hash) {
+    return stored === password;
+  }
+
+  if (algorithm !== "scrypt") return false;
   const calculatedHash = scryptSync(password, salt, 64).toString("hex");
   return timingSafeEqual(Buffer.from(hash, "hex"), Buffer.from(calculatedHash, "hex"));
 }
@@ -170,6 +176,11 @@ export default async function handler(req: any, res: any) {
       if (!user || !verifyPassword(normalizedPassword, user.password)) {
         res.status(401).json({ success: false, message: "Credenciais inválidas" });
         return;
+      }
+
+      // Se usuário legado estiver com senha em texto puro, migra para hash seguro no login válido.
+      if (!user.password.startsWith("scrypt:")) {
+        await store.updateUserPassword(user.id, hashPassword(normalizedPassword));
       }
 
       const token = await createSessionToken(user.id, user.email);
