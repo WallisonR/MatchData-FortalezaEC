@@ -88,6 +88,9 @@ const readJsonStorage = <T,>(key: string, fallback: T): T => {
   }
 };
 
+const getMatchesCacheKey = (email?: string | null) =>
+  `matches-cache:${(email ?? "anon").trim().toLowerCase()}`;
+
 const MOCK_MATCHES: Match[] = [];
 
 const MOCK_STATS: Record<number, MatchStats> = {};
@@ -107,6 +110,7 @@ function getResultBadge(result: string) {
 
 export default function Partidas() {
   const [matches, setMatches] = useState<Match[]>(MOCK_MATCHES);
+  const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
@@ -153,21 +157,45 @@ export default function Partidas() {
 
   useEffect(() => {
     const loadMatches = async () => {
+      let email: string | null = null;
+      try {
+        const sessionResponse = await fetch("/api/session", {
+          credentials: "include",
+        });
+        if (sessionResponse.ok) {
+          const sessionData = await sessionResponse.json();
+          email =
+            typeof sessionData?.email === "string" && sessionData.email
+              ? sessionData.email
+              : null;
+          setSessionEmail(email);
+        }
+      } catch {
+        // ignore session lookup errors
+      }
+
+      const cacheKey = getMatchesCacheKey(email);
       try {
         const response = await fetch("/api/matches", {
           credentials: "include",
         });
-        if (!response.ok) return;
+        if (!response.ok) throw new Error("Failed to load matches");
+
         const data = await response.json();
         if (Array.isArray(data?.matches)) {
           setMatches(data.matches);
+          localStorage.setItem(cacheKey, JSON.stringify(data.matches));
+          return;
         }
       } catch {
-        // keep empty state fallback
+        // fallback to per-user local cache
       }
+
+      const cachedMatches = readJsonStorage<Match[]>(cacheKey, MOCK_MATCHES);
+      setMatches(cachedMatches);
     };
 
-    loadMatches();
+    void loadMatches();
   }, []);
 
   const handleAddClick = () => {
@@ -570,8 +598,12 @@ export default function Partidas() {
       }
     }
 
-    // persist matches list in backend
+    // persist matches list in backend and local per-user cache
     try {
+      localStorage.setItem(
+        getMatchesCacheKey(sessionEmail),
+        JSON.stringify(toPersistMatches)
+      );
       await syncMatchesToServer(toPersistMatches);
     } catch {}
 
@@ -583,6 +615,10 @@ export default function Partidas() {
       const remaining = matches.filter(m => m.id !== id);
       setMatches(remaining);
       try {
+        localStorage.setItem(
+          getMatchesCacheKey(sessionEmail),
+          JSON.stringify(remaining)
+        );
         void syncMatchesToServer(remaining);
       } catch {}
       // remove round mapping and values
