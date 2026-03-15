@@ -13,11 +13,16 @@ import { listPersistedMatches, savePersistedMatches } from "../matchesStore";
 const SIMPLE_AUTH_COOKIE = "md_auth";
 const LOGIN_EMAIL = "admin@matchdata.com";
 const LOGIN_PASSWORD = "fec2026";
-const sessions = new Set<string>();
+type SessionData = {
+  email: string;
+  userLabel: string;
+};
+
+const sessions = new Map<string, SessionData>();
 
 function getCookieValue(rawCookie: string | undefined, name: string) {
   if (!rawCookie) return null;
-  const entries = rawCookie.split(";").map((v) => v.trim());
+  const entries = rawCookie.split(";").map(v => v.trim());
   for (const entry of entries) {
     const [key, ...rest] = entry.split("=");
     if (key === name) return decodeURIComponent(rest.join("="));
@@ -25,9 +30,14 @@ function getCookieValue(rawCookie: string | undefined, name: string) {
   return null;
 }
 
-function isAuthenticated(req: express.Request) {
+function getSession(req: express.Request): SessionData | null {
   const token = getCookieValue(req.headers.cookie, SIMPLE_AUTH_COOKIE);
-  return token ? sessions.has(token) : false;
+  if (!token) return null;
+  return sessions.get(token) ?? null;
+}
+
+function isAuthenticated(req: express.Request) {
+  return Boolean(getSession(req));
 }
 
 function requireSimpleAuth(
@@ -70,16 +80,29 @@ async function startServer() {
 
   app.post("/api/login", (req, res) => {
     const { email, password } = req.body ?? {};
-    const normalizedEmail = String(email ?? "").trim().toLowerCase();
+    const normalizedEmail = String(email ?? "")
+      .trim()
+      .toLowerCase();
     const normalizedPassword = String(password ?? "").trim();
 
-    if (normalizedEmail !== LOGIN_EMAIL || normalizedPassword !== LOGIN_PASSWORD) {
-      res.status(401).json({ success: false, message: "Credenciais inválidas" });
+    if (
+      normalizedEmail !== LOGIN_EMAIL ||
+      normalizedPassword !== LOGIN_PASSWORD
+    ) {
+      res
+        .status(401)
+        .json({ success: false, message: "Credenciais inválidas" });
       return;
     }
 
     const token = crypto.randomUUID();
-    sessions.add(token);
+    const userName = normalizedEmail.split("@")[0] || "Usuário";
+    const formattedName = userName.charAt(0).toUpperCase() + userName.slice(1);
+
+    sessions.set(token, {
+      email: normalizedEmail,
+      userLabel: `Usuário ${formattedName}`,
+    });
 
     res.cookie(SIMPLE_AUTH_COOKIE, token, {
       httpOnly: true,
@@ -100,7 +123,12 @@ async function startServer() {
   });
 
   app.get("/api/session", (req, res) => {
-    res.json({ authenticated: isAuthenticated(req) });
+    const session = getSession(req);
+    res.json({
+      authenticated: Boolean(session),
+      userLabel: session?.userLabel ?? null,
+      email: session?.email ?? null,
+    });
   });
 
   app.get("/api/matches", requireSimpleAuth, async (_req, res) => {

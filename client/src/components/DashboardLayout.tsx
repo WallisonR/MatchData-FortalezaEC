@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, PanelLeft, Moon, Sun } from "lucide-react";
+import { LayoutDashboard, LogOut, Moon, PanelLeft, Sun } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 
@@ -40,7 +40,6 @@ export default function DashboardLayout({
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
   }, [sidebarWidth]);
-
 
   return (
     <SidebarProvider
@@ -71,9 +70,40 @@ function DashboardLayoutContent({
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
+  const [userLabel, setUserLabel] = useState("Usuário");
   const sidebarRef = useRef<HTMLDivElement>(null);
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } finally {
+      setLocation("/login", { replace: true });
+    }
+  };
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const response = await fetch("/api/session", {
+          credentials: "include",
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (typeof data?.userLabel === "string" && data.userLabel.trim()) {
+          setUserLabel(data.userLabel.trim());
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    void loadUser();
+  }, []);
 
   useEffect(() => {
     if (isCollapsed) {
@@ -148,7 +178,7 @@ function DashboardLayoutContent({
                       isActive={isActive}
                       onClick={() => setLocation(item.path)}
                       tooltip={item.label}
-                      className={`h-10 transition-all font-normal`}
+                      className="h-10 transition-all font-normal"
                     >
                       <item.icon
                         className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
@@ -162,7 +192,14 @@ function DashboardLayoutContent({
           </SidebarContent>
 
           <SidebarFooter className="p-3">
-            <Button onClick={toggleTheme} variant="ghost" className="w-full justify-start gap-3">
+            {!isCollapsed ? (
+              <p className="px-2 text-xs text-muted-foreground">{userLabel}</p>
+            ) : null}
+            <Button
+              onClick={toggleTheme}
+              variant="ghost"
+              className="w-full justify-start gap-3"
+            >
               {theme === "light" ? (
                 <>
                   <Moon className="mr-2 h-4 w-4" />
@@ -174,6 +211,14 @@ function DashboardLayoutContent({
                   <span>Modo Claro</span>
                 </>
               )}
+            </Button>
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              className="w-full justify-start gap-3 text-destructive hover:text-destructive"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Sair</span>
             </Button>
           </SidebarFooter>
         </Sidebar>
