@@ -1,6 +1,13 @@
-# Configuração do Neon (persistência de partidas)
+# Configuração do Neon (persistência multiusuário por `user_id`)
 
-Este projeto persiste partidas no Neon através das rotas `/api/matches` e `/api/matches/sync`.
+Este projeto persiste usuários e partidas no Neon através das rotas:
+
+- `POST /api/register`
+- `POST /api/login`
+- `POST /api/logout`
+- `GET /api/session`
+- `GET /api/matches`
+- `PUT /api/matches/sync`
 
 ## Variáveis de ambiente na Vercel
 Com a integração Neon -> Vercel, normalmente já são criadas automaticamente.
@@ -16,24 +23,26 @@ O backend aceita (em ordem):
 7. `POSTGRES_URL_NO_SSL`
 8. montagem via parâmetros (`PGHOST`/`PGDATABASE`/`PGUSER`/`PGPASSWORD`) ou (`POSTGRES_HOST`/`POSTGRES_DATABASE`/`POSTGRES_USER`/`POSTGRES_PASSWORD`)
 
-> Se você já conectou a integração Neon na Vercel, `POSTGRES_URL` e similares geralmente já vêm preenchidas.
+## Segurança e arquitetura
+- As senhas são salvas com hash seguro (`scrypt`, equivalente ao requisito de bcrypt).
+- O login gera JWT assinado contendo `user_id`.
+- O JWT é salvo em cookie `HttpOnly`.
+- Toda leitura/escrita de partidas é filtrada por `user_id`.
 
-## Login fixo
-- e-mail: `admin@matchdata.com`
-- senha: `fec2026`
+## Estrutura SQL criada automaticamente
+Ao primeiro acesso, o backend garante as tabelas:
 
+- `users (id, email, password, created_at)`
+- `user_profiles (id, user_id, display_name, created_at)`
+- `user_data (id, user_id, title, value, payload, created_at)`
 
-## Funcionamento
-- `POST /api/login` autentica e grava cookie de sessão.
-- `GET /api/session` valida sessão.
-- `GET /api/matches` lê as partidas no Neon.
-- `PUT /api/matches/sync` salva as partidas no Neon.
+## Contas iniciais
+- Admin: `admin@matchdata.com` / `fec2026`
+- Nova conta solicitada: `leandro@matchdata.com` / `fec2026`
+
+> Se não existirem no banco, o sistema cria automaticamente no primeiro request da API.
 
 ## Fallback local (desenvolvimento)
-Se nenhuma variável de banco estiver definida, usa `.data/matches.json` local.
+Se nenhuma variável de banco estiver definida, usa `.data/matches.json` local **apenas para partidas**.
 
-## Importante para produção
-Em `production`/Vercel, se não houver variável de banco válida, a API retorna erro (não usa fallback local), para evitar perda silenciosa de dados entre navegadores/dias.
-
-Se quiser forçar fallback local apenas para testes fora de produção, use:
-- `FORCE_LOCAL_MATCH_STORE=1`
+Para autenticação/cadastro multiusuário, Neon é obrigatório.
