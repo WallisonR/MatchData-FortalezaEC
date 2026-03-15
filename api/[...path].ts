@@ -27,16 +27,22 @@ function hashPassword(password: string) {
 }
 
 function verifyPassword(password: string, stored: string) {
-  const [algorithm, salt, hash] = stored.split(":");
+  try {
+    const [algorithm, salt, hash] = stored.split(":");
 
-  // Compatibilidade com usuários legados salvos em texto puro.
-  if (!algorithm || !salt || !hash) {
-    return stored === password;
+    // Compatibilidade com usuários legados salvos em texto puro.
+    if (!algorithm || !salt || !hash) {
+      return stored === password;
+    }
+
+    if (algorithm !== "scrypt") return false;
+    if (!/^[a-f0-9]{128}$/i.test(hash)) return false;
+
+    const calculatedHash = scryptSync(password, salt, 64).toString("hex");
+    return timingSafeEqual(Buffer.from(hash, "hex"), Buffer.from(calculatedHash, "hex"));
+  } catch {
+    return false;
   }
-
-  if (algorithm !== "scrypt") return false;
-  const calculatedHash = scryptSync(password, salt, 64).toString("hex");
-  return timingSafeEqual(Buffer.from(hash, "hex"), Buffer.from(calculatedHash, "hex"));
 }
 
 function getJwtSecret() {
@@ -49,6 +55,18 @@ async function createSessionToken(userId: number, email: string) {
     .setIssuedAt()
     .setExpirationTime("7d")
     .sign(getJwtSecret());
+}
+
+function getFallbackUser(email: string, password: string): { id: number; email: string } | null {
+  if (email === LOGIN_EMAIL && password === LOGIN_PASSWORD) {
+    return { id: 1, email: LOGIN_EMAIL };
+  }
+
+  if (email === DEFAULT_USER_EMAIL && password === DEFAULT_USER_PASSWORD) {
+    return { id: 2, email: DEFAULT_USER_EMAIL };
+  }
+
+  return null;
 }
 
 async function getAuthUser(req: any): Promise<{ userId: number; email: string } | null> {
@@ -113,7 +131,11 @@ async function ensureDefaultUsers() {
 }
 
 export default async function handler(req: any, res: any) {
-  await ensureDefaultUsers();
+  try {
+    await ensureDefaultUsers();
+  } catch (error) {
+    console.error("[Auth] Failed to ensure default users:", error);
+  }
 
   const queryPath = req.query?.path;
   const pathSegments = Array.isArray(queryPath)
@@ -190,8 +212,22 @@ export default async function handler(req: any, res: any) {
       );
       res.status(200).json({ success: true, user: { id: user.id, email: user.email } });
       return;
-    } catch {
-      res.status(500).json({ success: false, message: "Falha no login" });
+    } catch (error) {
+      console.error("[Auth] Login error:", error);
+
+      // Fallback seguro para contas padrão em ambientes sem Neon configurado.
+      const fallbackUser = getFallbackUser(normalizedEmail, normalizedPassword);
+      if (fallbackUser) {
+        const token = await createSessionToken(fallbackUser.id, fallbackUser.email);
+        res.setHeader(
+          "Set-Cookie",
+          `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}; Secure`
+        );
+        res.status(200).json({ success: true, user: fallbackUser, warning: "login realizado em modo fallback" });
+        return;
+      }
+
+      res.status(500).json({ success: false, message: "Falha no login (erro interno)" });
       return;
     }
   }
