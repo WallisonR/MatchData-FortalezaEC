@@ -155,6 +155,15 @@ export default function Partidas() {
     });
   };
 
+  const saveMatchToServer = async (match: Match) => {
+    await fetch("/api/matches", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ match }),
+    });
+  };
+
   useEffect(() => {
     const loadMatches = async () => {
       let email: string | null = null;
@@ -164,9 +173,10 @@ export default function Partidas() {
         });
         if (sessionResponse.ok) {
           const sessionData = await sessionResponse.json();
+          const sessionEmailValue = sessionData?.user?.email;
           email =
-            typeof sessionData?.email === "string" && sessionData.email
-              ? sessionData.email
+            typeof sessionEmailValue === "string" && sessionEmailValue
+              ? sessionEmailValue
               : null;
           setSessionEmail(email);
         }
@@ -604,7 +614,17 @@ export default function Partidas() {
         getMatchesCacheKey(sessionEmail),
         JSON.stringify(toPersistMatches)
       );
-      await syncMatchesToServer(toPersistMatches);
+      if (editingId) {
+        const edited = toPersistMatches.find(match => match.id === editingId);
+        if (edited) {
+          await saveMatchToServer(edited);
+        }
+      } else {
+        const latestMatch = toPersistMatches[0];
+        if (latestMatch) {
+          await saveMatchToServer(latestMatch);
+        }
+      }
     } catch {}
 
     setOpen(false);
