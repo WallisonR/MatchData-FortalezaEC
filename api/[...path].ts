@@ -95,6 +95,22 @@ function getCookieValue(rawCookie: string | undefined, name: string) {
   return null;
 }
 
+function buildSessionCookie(token: string) {
+  const parts = [
+    `${COOKIE_NAME}=${encodeURIComponent(token)}`,
+    "Path=/",
+    "HttpOnly",
+    "SameSite=Lax",
+    `Max-Age=${60 * 60 * 24 * 7}`,
+  ];
+
+  if (process.env.NODE_ENV === "production") {
+    parts.push("Secure");
+  }
+
+  return parts.join("; ");
+}
+
 function parseBody(req: any) {
   const body = req.body;
   if (!body) return {};
@@ -174,10 +190,7 @@ export default async function handler(req: any, res: any) {
 
       const user = await store.createUser(normalizedEmail, hashPassword(normalizedPassword));
       const token = await createSessionToken(user.id, user.email);
-      res.setHeader(
-        "Set-Cookie",
-        `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}; Secure`
-      );
+      res.setHeader("Set-Cookie", buildSessionCookie(token));
       res.status(201).json({ success: true, user: { id: user.id, email: user.email } });
       return;
     } catch {
@@ -206,10 +219,7 @@ export default async function handler(req: any, res: any) {
       }
 
       const token = await createSessionToken(user.id, user.email);
-      res.setHeader(
-        "Set-Cookie",
-        `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}; Secure`
-      );
+      res.setHeader("Set-Cookie", buildSessionCookie(token));
       res.status(200).json({ success: true, user: { id: user.id, email: user.email } });
       return;
     } catch (error) {
@@ -219,10 +229,7 @@ export default async function handler(req: any, res: any) {
       const fallbackUser = getFallbackUser(normalizedEmail, normalizedPassword);
       if (fallbackUser) {
         const token = await createSessionToken(fallbackUser.id, fallbackUser.email);
-        res.setHeader(
-          "Set-Cookie",
-          `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}; Secure`
-        );
+        res.setHeader("Set-Cookie", buildSessionCookie(token));
         res.status(200).json({ success: true, user: fallbackUser, warning: "login realizado em modo fallback" });
         return;
       }
@@ -241,6 +248,46 @@ export default async function handler(req: any, res: any) {
   if (req.method === "GET" && path === "/session") {
     const auth = await getAuthUser(req);
     res.status(200).json({ authenticated: Boolean(auth), user: auth });
+    return;
+  }
+
+  if (req.method === "POST" && path === "/matches") {
+    const auth = await requireAuth(req, res);
+    if (!auth) return;
+
+    try {
+      const body = parseBody(req);
+      const candidateMatch = body?.match ?? body;
+      if (!candidateMatch || typeof candidateMatch !== "object") {
+        res.status(400).json({ message: "Invalid match payload" });
+        return;
+      }
+
+      const { listPersistedMatchesByUser, savePersistedMatchesByUser } = await getMatchesStore();
+      const currentMatches = await listPersistedMatchesByUser(auth.userId);
+
+      const normalizedMatch = {
+        ...candidateMatch,
+        id: Number(candidateMatch.id),
+        goalsFor: Number(candidateMatch.goalsFor) || 0,
+        goalsAgainst: Number(candidateMatch.goalsAgainst) || 0,
+      };
+
+      if (!normalizedMatch.id || !normalizedMatch.date || !normalizedMatch.opponent) {
+        res.status(400).json({ message: "Match is missing required fields" });
+        return;
+      }
+
+      const withoutCurrent = currentMatches.filter((match) => match.id !== normalizedMatch.id);
+      const mergedMatches = [normalizedMatch, ...withoutCurrent].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+
+      await savePersistedMatchesByUser(auth.userId, mergedMatches);
+      res.status(201).json({ success: true, match: normalizedMatch, matches: mergedMatches });
+    } catch {
+      res.status(500).json({ message: "Failed to save match" });
+    }
     return;
   }
 
