@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, PanelLeft, Moon, Sun } from "lucide-react";
+import { LayoutDashboard, PanelLeft, Moon, Sun, LogOut } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 
@@ -40,7 +40,6 @@ export default function DashboardLayout({
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
   }, [sidebarWidth]);
-
 
   return (
     <SidebarProvider
@@ -74,6 +73,17 @@ function DashboardLayoutContent({
   const sidebarRef = useRef<HTMLDivElement>(null);
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } finally {
+      setLocation("/login", { replace: true });
+    }
+  };
 
   useEffect(() => {
     if (isCollapsed) {
@@ -158,11 +168,25 @@ function DashboardLayoutContent({
                   </SidebarMenuItem>
                 );
               })}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={handleLogout}
+                  tooltip="Sair"
+                  className="h-10 transition-all font-normal text-destructive hover:text-destructive"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sair</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
 
           <SidebarFooter className="p-3">
-            <Button onClick={toggleTheme} variant="ghost" className="w-full justify-start gap-3">
+            <Button
+              onClick={toggleTheme}
+              variant="ghost"
+              className="w-full justify-start gap-3"
+            >
               {theme === "light" ? (
                 <>
                   <Moon className="mr-2 h-4 w-4" />
