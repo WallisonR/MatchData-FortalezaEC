@@ -92,7 +92,10 @@ function getNeonFetchEndpointFromUrl(connectionString: string) {
   }
 }
 
-async function neonQuery<T = any>(query: string, params: unknown[] = []): Promise<T[]> {
+async function neonQuery<T = any>(
+  query: string,
+  params: unknown[] = []
+): Promise<T[]> {
   // Preferred mode: direct Neon connection string (what you provided)
   if (NEON_DATABASE_URL) {
     const endpoint = getNeonFetchEndpointFromUrl(NEON_DATABASE_URL);
@@ -153,6 +156,15 @@ async function ensureNeonTable() {
     )
   `);
   await neonQuery(`
+    CREATE TABLE IF NOT EXISTS app_user_matches (
+      owner_key TEXT NOT NULL,
+      match_id INTEGER NOT NULL,
+      payload JSONB NOT NULL,
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (owner_key, match_id)
+    )
+  `);
+  await neonQuery(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
@@ -185,7 +197,6 @@ function neonEnabled() {
   return Boolean(NEON_DATABASE_URL || (NEON_SQL_ENDPOINT && NEON_SQL_API_KEY));
 }
 
-
 function shouldAllowLocalFallback() {
   if (process.env.FORCE_LOCAL_MATCH_STORE === "1") return true;
   return process.env.NODE_ENV !== "production" && process.env.VERCEL !== "1";
@@ -199,7 +210,7 @@ export async function listPersistedMatches(): Promise<PersistedMatch[]> {
     );
     return rows
       .filter((r): r is { payload: PersistedMatch } => Boolean(r && r.payload))
-      .map((r) => normalizeMatch(r.payload));
+      .map(r => normalizeMatch(r.payload));
   }
 
   if (!shouldAllowLocalFallback()) {
@@ -216,7 +227,103 @@ export async function listPersistedMatches(): Promise<PersistedMatch[]> {
   }
 }
 
-export async function createUser(email: string, passwordHash: string): Promise<AuthUser> {
+export async function listPersistedMatchesByOwner(
+  ownerKey: string
+): Promise<PersistedMatch[]> {
+  const normalizedOwner = String(ownerKey || "")
+    .trim()
+    .toLowerCase();
+  if (!normalizedOwner) return [];
+
+  if (neonEnabled()) {
+    await ensureNeonTable();
+    const rows = await neonQuery<{ payload?: PersistedMatch }>(
+      "SELECT payload FROM app_user_matches WHERE owner_key = $1 ORDER BY match_id DESC",
+      [normalizedOwner]
+    );
+
+    return rows
+      .filter((r): r is { payload: PersistedMatch } => Boolean(r && r.payload))
+      .map(r => normalizeMatch(r.payload));
+  }
+
+  if (!shouldAllowLocalFallback()) {
+    throw new Error("Neon database is not configured in this environment");
+  }
+
+  try {
+    if (!fs.existsSync(LOCAL_FILE)) return [];
+    const raw = fs.readFileSync(LOCAL_FILE, "utf-8");
+    const parsed = JSON.parse(raw) as Record<string, PersistedMatch[]>;
+
+    if (Array.isArray(parsed)) {
+      return parsed.map(normalizeMatch);
+    }
+
+    const ownerMatches = parsed?.[normalizedOwner];
+    return Array.isArray(ownerMatches) ? ownerMatches.map(normalizeMatch) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function savePersistedMatchesByOwner(
+  ownerKey: string,
+  matches: PersistedMatch[]
+): Promise<void> {
+  const normalizedOwner = String(ownerKey || "")
+    .trim()
+    .toLowerCase();
+  if (!normalizedOwner) return;
+  const normalizedMatches = matches.map(normalizeMatch);
+
+  if (neonEnabled()) {
+    await ensureNeonTable();
+    await neonQuery("BEGIN");
+    try {
+      await neonQuery("DELETE FROM app_user_matches WHERE owner_key = $1", [
+        normalizedOwner,
+      ]);
+      for (const item of normalizedMatches) {
+        await neonQuery(
+          "INSERT INTO app_user_matches (owner_key, match_id, payload, updated_at) VALUES ($1, $2, $3::jsonb, NOW())",
+          [normalizedOwner, item.id, JSON.stringify(item)]
+        );
+      }
+      await neonQuery("COMMIT");
+    } catch (error) {
+      await neonQuery("ROLLBACK");
+      throw error;
+    }
+    return;
+  }
+
+  if (!shouldAllowLocalFallback()) {
+    throw new Error("Neon database is not configured in this environment");
+  }
+
+  ensureLocalDir();
+  let payload: Record<string, PersistedMatch[]> = {};
+  if (fs.existsSync(LOCAL_FILE)) {
+    try {
+      const current = JSON.parse(fs.readFileSync(LOCAL_FILE, "utf-8"));
+      if (Array.isArray(current)) {
+        payload = { legacy: current.map(normalizeMatch) };
+      } else if (current && typeof current === "object") {
+        payload = current;
+      }
+    } catch {
+      payload = {};
+    }
+  }
+  payload[normalizedOwner] = normalizedMatches;
+  fs.writeFileSync(LOCAL_FILE, JSON.stringify(payload, null, 2), "utf-8");
+}
+
+export async function createUser(
+  email: string,
+  passwordHash: string
+): Promise<AuthUser> {
   if (!neonEnabled()) {
     throw new Error("Neon database is required for user management");
   }
@@ -231,10 +338,10 @@ export async function createUser(email: string, passwordHash: string): Promise<A
     throw new Error("Failed to create user");
   }
 
-  await neonQuery("INSERT INTO user_profiles (user_id, display_name) VALUES ($1, $2) ON CONFLICT (user_id) DO NOTHING", [
-    rows[0].id,
-    email,
-  ]);
+  await neonQuery(
+    "INSERT INTO user_profiles (user_id, display_name) VALUES ($1, $2) ON CONFLICT (user_id) DO NOTHING",
+    [rows[0].id, email]
+  );
 
   return rows[0];
 }
@@ -252,22 +359,33 @@ export async function getUserByEmail(email: string): Promise<AuthUser | null> {
   return rows[0] ?? null;
 }
 
-export async function updateUserPassword(userId: number, passwordHash: string): Promise<void> {
+export async function updateUserPassword(
+  userId: number,
+  passwordHash: string
+): Promise<void> {
   if (!neonEnabled()) {
     throw new Error("Neon database is required for user management");
   }
 
   await ensureNeonTable();
-  await neonQuery("UPDATE users SET password = $1 WHERE id = $2", [passwordHash, userId]);
+  await neonQuery("UPDATE users SET password = $1 WHERE id = $2", [
+    passwordHash,
+    userId,
+  ]);
 }
 
-export async function ensureUser(email: string, passwordHash: string): Promise<AuthUser> {
+export async function ensureUser(
+  email: string,
+  passwordHash: string
+): Promise<AuthUser> {
   const existing = await getUserByEmail(email);
   if (existing) return existing;
   return createUser(email, passwordHash);
 }
 
-export async function listPersistedMatchesByUser(userId: number): Promise<PersistedMatch[]> {
+export async function listPersistedMatchesByUser(
+  userId: number
+): Promise<PersistedMatch[]> {
   if (neonEnabled()) {
     await ensureNeonTable();
     const rows = await neonQuery<{ payload?: PersistedMatch }>(
@@ -276,13 +394,16 @@ export async function listPersistedMatchesByUser(userId: number): Promise<Persis
     );
     return rows
       .filter((r): r is { payload: PersistedMatch } => Boolean(r && r.payload))
-      .map((r) => normalizeMatch(r.payload));
+      .map(r => normalizeMatch(r.payload));
   }
 
   return listPersistedMatches();
 }
 
-export async function savePersistedMatchesByUser(userId: number, matches: PersistedMatch[]): Promise<void> {
+export async function savePersistedMatchesByUser(
+  userId: number,
+  matches: PersistedMatch[]
+): Promise<void> {
   const normalized = matches.map(normalizeMatch);
 
   if (neonEnabled()) {
@@ -307,7 +428,9 @@ export async function savePersistedMatchesByUser(userId: number, matches: Persis
   await savePersistedMatches(matches);
 }
 
-export async function savePersistedMatches(matches: PersistedMatch[]): Promise<void> {
+export async function savePersistedMatches(
+  matches: PersistedMatch[]
+): Promise<void> {
   const normalized = matches.map(normalizeMatch);
 
   if (neonEnabled()) {
