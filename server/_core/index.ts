@@ -8,16 +8,23 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
-import { listPersistedMatches, savePersistedMatches } from "../matchesStore";
+import {
+  listPersistedMatchesByOwner,
+  savePersistedMatchesByOwner,
+} from "../matchesStore";
 
 const SIMPLE_AUTH_COOKIE = "md_auth";
 const LOGIN_EMAIL = "admin@matchdata.com";
 const LOGIN_PASSWORD = "fec2026";
-const sessions = new Set<string>();
+type SessionData = {
+  email: string;
+};
+
+const sessions = new Map<string, SessionData>();
 
 function getCookieValue(rawCookie: string | undefined, name: string) {
   if (!rawCookie) return null;
-  const entries = rawCookie.split(";").map((v) => v.trim());
+  const entries = rawCookie.split(";").map(v => v.trim());
   for (const entry of entries) {
     const [key, ...rest] = entry.split("=");
     if (key === name) return decodeURIComponent(rest.join("="));
@@ -25,9 +32,14 @@ function getCookieValue(rawCookie: string | undefined, name: string) {
   return null;
 }
 
-function isAuthenticated(req: express.Request) {
+function getSession(req: express.Request): SessionData | null {
   const token = getCookieValue(req.headers.cookie, SIMPLE_AUTH_COOKIE);
-  return token ? sessions.has(token) : false;
+  if (!token) return null;
+  return sessions.get(token) ?? null;
+}
+
+function isAuthenticated(req: express.Request) {
+  return Boolean(getSession(req));
 }
 
 function requireSimpleAuth(
@@ -70,16 +82,25 @@ async function startServer() {
 
   app.post("/api/login", (req, res) => {
     const { email, password } = req.body ?? {};
-    const normalizedEmail = String(email ?? "").trim().toLowerCase();
+    const normalizedEmail = String(email ?? "")
+      .trim()
+      .toLowerCase();
     const normalizedPassword = String(password ?? "").trim();
 
-    if (normalizedEmail !== LOGIN_EMAIL || normalizedPassword !== LOGIN_PASSWORD) {
-      res.status(401).json({ success: false, message: "Credenciais inválidas" });
+    if (
+      normalizedEmail !== LOGIN_EMAIL ||
+      normalizedPassword !== LOGIN_PASSWORD
+    ) {
+      res
+        .status(401)
+        .json({ success: false, message: "Credenciais inválidas" });
       return;
     }
 
     const token = crypto.randomUUID();
-    sessions.add(token);
+    sessions.set(token, {
+      email: normalizedEmail,
+    });
 
     res.cookie(SIMPLE_AUTH_COOKIE, token, {
       httpOnly: true,
@@ -100,12 +121,22 @@ async function startServer() {
   });
 
   app.get("/api/session", (req, res) => {
-    res.json({ authenticated: isAuthenticated(req) });
+    const session = getSession(req);
+    res.json({
+      authenticated: Boolean(session),
+      email: session?.email ?? null,
+    });
   });
 
-  app.get("/api/matches", requireSimpleAuth, async (_req, res) => {
+  app.get("/api/matches", requireSimpleAuth, async (req, res) => {
     try {
-      const matches = await listPersistedMatches();
+      const session = getSession(req);
+      if (!session?.email) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      const matches = await listPersistedMatchesByOwner(session.email);
       res.json({ matches });
     } catch (error) {
       res.status(500).json({ message: "Failed to load matches" });
@@ -114,8 +145,14 @@ async function startServer() {
 
   app.put("/api/matches/sync", requireSimpleAuth, async (req, res) => {
     try {
+      const session = getSession(req);
+      if (!session?.email) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
       const matches = Array.isArray(req.body?.matches) ? req.body.matches : [];
-      await savePersistedMatches(matches);
+      await savePersistedMatchesByOwner(session.email, matches);
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to save matches" });

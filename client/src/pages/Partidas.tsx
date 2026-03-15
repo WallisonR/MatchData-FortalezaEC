@@ -106,14 +106,7 @@ function getResultBadge(result: string) {
 }
 
 export default function Partidas() {
-  const [matches, setMatches] = useState<Match[]>(() => {
-    try {
-      const stored = localStorage.getItem("matches");
-      return stored ? JSON.parse(stored) : MOCK_MATCHES;
-    } catch {
-      return MOCK_MATCHES;
-    }
-  });
+  const [matches, setMatches] = useState<Match[]>(MOCK_MATCHES);
   const [open, setOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
@@ -168,10 +161,9 @@ export default function Partidas() {
         const data = await response.json();
         if (Array.isArray(data?.matches)) {
           setMatches(data.matches);
-          localStorage.setItem("matches", JSON.stringify(data.matches));
         }
       } catch {
-        // keep local data fallback
+        // keep empty state fallback
       }
     };
 
@@ -578,9 +570,8 @@ export default function Partidas() {
       }
     }
 
-    // persist matches list
+    // persist matches list in backend
     try {
-      localStorage.setItem("matches", JSON.stringify(toPersistMatches));
       await syncMatchesToServer(toPersistMatches);
     } catch {}
 
@@ -592,7 +583,6 @@ export default function Partidas() {
       const remaining = matches.filter(m => m.id !== id);
       setMatches(remaining);
       try {
-        localStorage.setItem("matches", JSON.stringify(remaining));
         void syncMatchesToServer(remaining);
       } catch {}
       // remove round mapping and values
@@ -1258,7 +1248,10 @@ export default function Partidas() {
                   "pt-BR"
                 );
                 return (
-                  <TableRow key={match.id} className="hover:bg-gray-50 dark:hover:bg-white/5">
+                  <TableRow
+                    key={match.id}
+                    className="hover:bg-gray-50 dark:hover:bg-white/5"
+                  >
                     <TableCell>{matchDate}</TableCell>
                     <TableCell className="font-medium">
                       {match.opponent}
