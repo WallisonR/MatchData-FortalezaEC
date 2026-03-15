@@ -386,11 +386,13 @@ export async function ensureUser(
 export async function listPersistedMatchesByUser(
   userId: number
 ): Promise<PersistedMatch[]> {
+  const ownerKey = `user:${Number(userId)}`;
+
   if (neonEnabled()) {
     await ensureNeonTable();
     const rows = await neonQuery<{ payload?: PersistedMatch }>(
-      "SELECT payload FROM user_data WHERE user_id = $1 ORDER BY id DESC",
-      [userId]
+      "SELECT payload FROM app_user_matches WHERE owner_key = $1 ORDER BY match_id DESC",
+      [ownerKey]
     );
     return rows
       .filter((r): r is { payload: PersistedMatch } => Boolean(r && r.payload))
@@ -405,16 +407,19 @@ export async function savePersistedMatchesByUser(
   matches: PersistedMatch[]
 ): Promise<void> {
   const normalized = matches.map(normalizeMatch);
+  const ownerKey = `user:${Number(userId)}`;
 
   if (neonEnabled()) {
     await ensureNeonTable();
     await neonQuery("BEGIN");
     try {
-      await neonQuery("DELETE FROM user_data WHERE user_id = $1", [userId]);
+      await neonQuery("DELETE FROM app_user_matches WHERE owner_key = $1", [
+        ownerKey,
+      ]);
       for (const item of normalized) {
         await neonQuery(
-          "INSERT INTO user_data (user_id, title, value, payload, created_at) VALUES ($1, $2, $3, $4::jsonb, NOW())",
-          [userId, item.opponent, item.goalsFor, JSON.stringify(item)]
+          "INSERT INTO app_user_matches (owner_key, match_id, payload, updated_at) VALUES ($1, $2, $3::jsonb, NOW())",
+          [ownerKey, item.id, JSON.stringify(item)]
         );
       }
       await neonQuery("COMMIT");
