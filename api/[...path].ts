@@ -1,11 +1,64 @@
+import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { jwtVerify, SignJWT } from "jose";
+
 const COOKIE_NAME = "md_auth";
 const LOGIN_EMAIL = "admin@matchdata.com";
 const LOGIN_PASSWORD = "fec2026";
+const DEFAULT_USER_EMAIL = "leandro@matchdata.com";
+const DEFAULT_USER_PASSWORD = "fec2026";
+const SESSION_SECRET = process.env.SESSION_SECRET || "matchdata-dev-secret-change-me";
 
 export const config = { runtime: "nodejs" };
 
+type AuthUser = {
+  id: number;
+  email: string;
+  password: string;
+};
+
 async function getMatchesStore() {
   return import("../server/matchesStore");
+}
+
+function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const hash = scryptSync(password, salt, 64).toString("hex");
+  return `scrypt:${salt}:${hash}`;
+}
+
+function verifyPassword(password: string, stored: string) {
+  const [algorithm, salt, hash] = stored.split(":");
+  if (algorithm !== "scrypt" || !salt || !hash) return false;
+  const calculatedHash = scryptSync(password, salt, 64).toString("hex");
+  return timingSafeEqual(Buffer.from(hash, "hex"), Buffer.from(calculatedHash, "hex"));
+}
+
+function getJwtSecret() {
+  return new TextEncoder().encode(SESSION_SECRET);
+}
+
+async function createSessionToken(userId: number, email: string) {
+  return new SignJWT({ user_id: userId, email })
+    .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+    .setIssuedAt()
+    .setExpirationTime("7d")
+    .sign(getJwtSecret());
+}
+
+async function getAuthUser(req: any): Promise<{ userId: number; email: string } | null> {
+  const token = getCookieValue(req.headers.cookie, COOKIE_NAME);
+  if (!token) return null;
+
+  try {
+    const { payload } = await jwtVerify(token, getJwtSecret(), { algorithms: ["HS256"] });
+    const userId = Number(payload.user_id);
+    const email = String(payload.email ?? "");
+
+    if (!userId || !email) return null;
+    return { userId, email };
+  } catch {
+    return null;
+  }
 }
 
 function getCookieValue(rawCookie: string | undefined, name: string) {
@@ -17,11 +70,6 @@ function getCookieValue(rawCookie: string | undefined, name: string) {
   }
   return null;
 }
-
-function isAuthenticated(req: any) {
-  return getCookieValue(req.headers.cookie, COOKIE_NAME) === "1";
-}
-
 
 function parseBody(req: any) {
   const body = req.body;
@@ -36,15 +84,31 @@ function parseBody(req: any) {
   return body;
 }
 
-function requireAuth(req: any, res: any) {
-  if (!isAuthenticated(req)) {
+async function requireAuth(req: any, res: any) {
+  const auth = await getAuthUser(req);
+  if (!auth) {
     res.status(401).json({ message: "Unauthorized" });
-    return false;
+    return null;
   }
-  return true;
+  return auth;
+}
+
+async function ensureDefaultUsers() {
+  const store = await getMatchesStore();
+  const admin = await store.getUserByEmail(LOGIN_EMAIL);
+  if (!admin) {
+    await store.createUser(LOGIN_EMAIL, hashPassword(LOGIN_PASSWORD));
+  }
+
+  const leandro = await store.getUserByEmail(DEFAULT_USER_EMAIL);
+  if (!leandro) {
+    await store.createUser(DEFAULT_USER_EMAIL, hashPassword(DEFAULT_USER_PASSWORD));
+  }
 }
 
 export default async function handler(req: any, res: any) {
+  await ensureDefaultUsers();
+
   const queryPath = req.query?.path;
   const pathSegments = Array.isArray(queryPath)
     ? queryPath
@@ -62,22 +126,63 @@ export default async function handler(req: any, res: any) {
 
   const path = `/${rawPath.replace(/^\/+/, "")}`;
 
+  if (req.method === "POST" && path === "/register") {
+    try {
+      const body = parseBody(req);
+      const normalizedEmail = String(body?.email ?? "").trim().toLowerCase();
+      const normalizedPassword = String(body?.password ?? "").trim();
+
+      if (!normalizedEmail || !normalizedPassword) {
+        res.status(400).json({ success: false, message: "Email e senha são obrigatórios" });
+        return;
+      }
+
+      const store = await getMatchesStore();
+      const existing = await store.getUserByEmail(normalizedEmail);
+      if (existing) {
+        res.status(409).json({ success: false, message: "Email já cadastrado" });
+        return;
+      }
+
+      const user = await store.createUser(normalizedEmail, hashPassword(normalizedPassword));
+      const token = await createSessionToken(user.id, user.email);
+      res.setHeader(
+        "Set-Cookie",
+        `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}; Secure`
+      );
+      res.status(201).json({ success: true, user: { id: user.id, email: user.email } });
+      return;
+    } catch {
+      res.status(500).json({ success: false, message: "Falha ao criar usuário" });
+      return;
+    }
+  }
+
   if (req.method === "POST" && path === "/login") {
     const body = parseBody(req);
     const normalizedEmail = String(body?.email ?? "").trim().toLowerCase();
     const normalizedPassword = String(body?.password ?? "").trim();
 
-    if (normalizedEmail !== LOGIN_EMAIL || normalizedPassword !== LOGIN_PASSWORD) {
-      res.status(401).json({ success: false, message: "Credenciais inválidas" });
+    try {
+      const store = await getMatchesStore();
+      const user: AuthUser | null = await store.getUserByEmail(normalizedEmail);
+
+      if (!user || !verifyPassword(normalizedPassword, user.password)) {
+        res.status(401).json({ success: false, message: "Credenciais inválidas" });
+        return;
+      }
+
+      const token = await createSessionToken(user.id, user.email);
+      res.setHeader(
+        "Set-Cookie",
+        `${COOKIE_NAME}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}; Secure`
+      );
+      res.status(200).json({ success: true, user: { id: user.id, email: user.email } });
+      return;
+    } catch {
+      res.status(500).json({ success: false, message: "Falha no login" });
       return;
     }
-
-    res.setHeader(
-      "Set-Cookie",
-      `${COOKIE_NAME}=1; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}; Secure`
-    );
-    res.status(200).json({ success: true });
-    return;
   }
 
   if (req.method === "POST" && path === "/logout") {
@@ -87,15 +192,17 @@ export default async function handler(req: any, res: any) {
   }
 
   if (req.method === "GET" && path === "/session") {
-    res.status(200).json({ authenticated: isAuthenticated(req) });
+    const auth = await getAuthUser(req);
+    res.status(200).json({ authenticated: Boolean(auth), user: auth });
     return;
   }
 
   if (req.method === "GET" && path === "/matches") {
-    if (!requireAuth(req, res)) return;
+    const auth = await requireAuth(req, res);
+    if (!auth) return;
     try {
-      const { listPersistedMatches } = await getMatchesStore();
-      const matches = await listPersistedMatches();
+      const { listPersistedMatchesByUser } = await getMatchesStore();
+      const matches = await listPersistedMatchesByUser(auth.userId);
       res.status(200).json({ matches });
     } catch {
       res.status(500).json({ message: "Failed to load matches" });
@@ -104,12 +211,13 @@ export default async function handler(req: any, res: any) {
   }
 
   if (req.method === "PUT" && path === "/matches/sync") {
-    if (!requireAuth(req, res)) return;
+    const auth = await requireAuth(req, res);
+    if (!auth) return;
     try {
       const body = parseBody(req);
       const matches = Array.isArray(body?.matches) ? body.matches : [];
-      const { savePersistedMatches } = await getMatchesStore();
-      await savePersistedMatches(matches);
+      const { savePersistedMatchesByUser } = await getMatchesStore();
+      await savePersistedMatchesByUser(auth.userId, matches);
       res.status(200).json({ success: true });
     } catch {
       res.status(500).json({ message: "Failed to save matches" });
