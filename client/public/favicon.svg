@@ -1,30 +1,42 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="MatchData Fortaleza favicon">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MatchData Fortaleza favicon">
   <defs>
-    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#1450c8" />
-      <stop offset="100%" stop-color="#0d2f84" />
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff0f1e"/>
+      <stop offset="1" stop-color="#0c3da3"/>
     </linearGradient>
-    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ff1f1f" />
-      <stop offset="100%" stop-color="#d30000" />
+    <linearGradient id="barR" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff3e2f"/>
+      <stop offset="1" stop-color="#ff0015"/>
+    </linearGradient>
+    <linearGradient id="barB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2f83e6"/>
+      <stop offset="1" stop-color="#0e4bb7"/>
     </linearGradient>
   </defs>
 
-  <rect x="4" y="4" width="120" height="120" rx="18" fill="url(#blue)" />
-  <rect x="9" y="9" width="110" height="110" rx="14" fill="#ffffff" />
-  <rect x="14" y="14" width="100" height="84" rx="10" fill="url(#red)" />
+  <rect x="16" y="16" width="480" height="480" rx="52" fill="#1650ba"/>
+  <rect x="30" y="30" width="452" height="452" rx="44" fill="#f3f3f3"/>
+  <rect x="52" y="52" width="408" height="408" rx="18" fill="url(#bg)"/>
 
-  <rect x="24" y="57" width="14" height="41" fill="#ff3218" />
-  <rect x="46" y="42" width="14" height="56" fill="#f3f3f3" />
-  <rect x="68" y="52" width="14" height="46" fill="#f3f3f3" />
-  <rect x="80" y="36" width="26" height="62" fill="url(#blue)" />
+  <rect x="72" y="236" width="68" height="188" fill="url(#barR)" opacity="0.95"/>
+  <rect x="370" y="204" width="68" height="220" fill="url(#barB)" opacity="0.95"/>
 
-  <polyline points="14,66 34,55 53,45 72,54 93,45 114,53" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
-  <circle cx="34" cy="55" r="3.8" fill="#1450c8" stroke="#ffffff" stroke-width="2" />
-  <circle cx="53" cy="45" r="3.8" fill="#1450c8" stroke="#ffffff" stroke-width="2" />
-  <circle cx="72" cy="54" r="3.8" fill="#1450c8" stroke="#ffffff" stroke-width="2" />
-  <circle cx="93" cy="45" r="3.8" fill="#1450c8" stroke="#ffffff" stroke-width="2" />
+  <path d="M52 244L126 204L214 160L294 194L364 158L460 194" fill="none" stroke="#ffffff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <g fill="#2f61bb" stroke="#ffffff" stroke-width="10">
+    <circle cx="126" cy="204" r="17"/>
+    <circle cx="214" cy="160" r="17"/>
+    <circle cx="294" cy="194" r="17"/>
+  </g>
 
-  <rect x="14" y="101" width="100" height="13" rx="2" fill="url(#blue)" />
-  <text x="64" y="110" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="9" font-weight="700" fill="#ffffff">MATCHDATA</text>
+  <path d="M168 374V224h50l42 85 43-85h50v150h-40l-2-94-34 69h-34l-33-69-2 94z" fill="#ffffff"/>
+
+  <g transform="translate(318 76)">
+    <polygon points="0,0 100,0 116,18 116,44 56,116 0,44" fill="#ffffff" opacity="0.95"/>
+    <polygon points="5,5 95,5 108,18 108,42 56,108 5,42" fill="#2f83e6"/>
+    <rect x="8" y="8" width="92" height="28" fill="#ffffff"/>
+    <text x="54" y="29" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11" font-weight="700" fill="#1b5ab6">FORTALEZA</text>
+    <polygon points="8,42 54,42 54,102" fill="#1f5fae"/>
+    <polygon points="100,42 54,42 54,102" fill="#ff1f2b"/>
+    <polygon points="56,-10 61,2 74,2 63,9 67,21 56,13 45,21 49,9 38,2 51,2" fill="#ffda47"/>
+  </g>
 </svg>
