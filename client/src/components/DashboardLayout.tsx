@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -85,25 +84,6 @@ function DashboardLayoutContent({
       setLocation("/login", { replace: true });
     }
   };
-
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const response = await fetch("/api/session", {
-          credentials: "include",
-        });
-        if (!response.ok) return;
-        const data = await response.json();
-        if (typeof data?.userLabel === "string" && data.userLabel.trim()) {
-          setUserLabel(data.userLabel.trim());
-        }
-      } catch {
-        // ignore
-      }
-    };
-
-    void loadUser();
-  }, []);
 
   useEffect(() => {
     if (isCollapsed) {
@@ -201,35 +181,38 @@ function DashboardLayoutContent({
             </SidebarMenu>
           </SidebarContent>
 
-          <SidebarFooter className="p-3">
-            {!isCollapsed ? (
-              <p className="px-2 text-xs text-muted-foreground">{userLabel}</p>
-            ) : null}
-            <Button
-              onClick={toggleTheme}
-              variant="ghost"
-              className="w-full justify-start gap-3"
-            >
-              {theme === "light" ? (
-                <>
-                  <Moon className="mr-2 h-4 w-4" />
-                  <span>Modo Escuro</span>
-                </>
-              ) : (
-                <>
-                  <Sun className="mr-2 h-4 w-4" />
-                  <span>Modo Claro</span>
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={handleLogout}
-              variant="ghost"
-              className="w-full justify-start gap-3 text-destructive hover:text-destructive"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Sair</span>
-            </Button>
+          <SidebarFooter className="p-2">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={toggleTheme}
+                  tooltip={theme === "light" ? "Modo Escuro" : "Modo Claro"}
+                  className="h-10 transition-all font-normal"
+                >
+                  {theme === "light" ? (
+                    <>
+                      <Moon className="h-4 w-4" />
+                      <span>Modo Escuro</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sun className="h-4 w-4" />
+                      <span>Modo Claro</span>
+                    </>
+                  )}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={handleLogout}
+                  tooltip="Sair"
+                  className="h-10 transition-all font-normal text-destructive hover:text-destructive"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sair</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
           </SidebarFooter>
         </Sidebar>
         <div

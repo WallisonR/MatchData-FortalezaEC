@@ -8,14 +8,16 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
-import { listPersistedMatches, savePersistedMatches } from "../matchesStore";
+import {
+  listPersistedMatchesByOwner,
+  savePersistedMatchesByOwner,
+} from "../matchesStore";
 
 const SIMPLE_AUTH_COOKIE = "md_auth";
 const LOGIN_EMAIL = "admin@matchdata.com";
 const LOGIN_PASSWORD = "fec2026";
 type SessionData = {
   email: string;
-  userLabel: string;
 };
 
 const sessions = new Map<string, SessionData>();
@@ -96,12 +98,8 @@ async function startServer() {
     }
 
     const token = crypto.randomUUID();
-    const userName = normalizedEmail.split("@")[0] || "Usuário";
-    const formattedName = userName.charAt(0).toUpperCase() + userName.slice(1);
-
     sessions.set(token, {
       email: normalizedEmail,
-      userLabel: `Usuário ${formattedName}`,
     });
 
     res.cookie(SIMPLE_AUTH_COOKIE, token, {
@@ -126,14 +124,19 @@ async function startServer() {
     const session = getSession(req);
     res.json({
       authenticated: Boolean(session),
-      userLabel: session?.userLabel ?? null,
       email: session?.email ?? null,
     });
   });
 
-  app.get("/api/matches", requireSimpleAuth, async (_req, res) => {
+  app.get("/api/matches", requireSimpleAuth, async (req, res) => {
     try {
-      const matches = await listPersistedMatches();
+      const session = getSession(req);
+      if (!session?.email) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
+      const matches = await listPersistedMatchesByOwner(session.email);
       res.json({ matches });
     } catch (error) {
       res.status(500).json({ message: "Failed to load matches" });
@@ -142,8 +145,14 @@ async function startServer() {
 
   app.put("/api/matches/sync", requireSimpleAuth, async (req, res) => {
     try {
+      const session = getSession(req);
+      if (!session?.email) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+      }
+
       const matches = Array.isArray(req.body?.matches) ? req.body.matches : [];
-      await savePersistedMatches(matches);
+      await savePersistedMatchesByOwner(session.email, matches);
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Failed to save matches" });
