@@ -34,6 +34,13 @@ export type PersistedMatch = {
   corners?: number;
 };
 
+export type AuthUser = {
+  id: number;
+  email: string;
+  password: string;
+  created_at?: string;
+};
+
 const LOCAL_FILE = path.resolve(process.cwd(), ".data", "matches.json");
 
 function ensureLocalDir() {
@@ -145,6 +152,32 @@ async function ensureNeonTable() {
       updated_at TIMESTAMPTZ DEFAULT NOW()
     )
   `);
+  await neonQuery(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      email TEXT UNIQUE NOT NULL,
+      password TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  await neonQuery(`
+    CREATE TABLE IF NOT EXISTS user_profiles (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+      display_name TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  await neonQuery(`
+    CREATE TABLE IF NOT EXISTS user_data (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      title TEXT,
+      value INTEGER,
+      payload JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
   neonReady = true;
 }
 
@@ -181,6 +214,97 @@ export async function listPersistedMatches(): Promise<PersistedMatch[]> {
   } catch {
     return [];
   }
+}
+
+export async function createUser(email: string, passwordHash: string): Promise<AuthUser> {
+  if (!neonEnabled()) {
+    throw new Error("Neon database is required for user management");
+  }
+
+  await ensureNeonTable();
+  const rows = await neonQuery<AuthUser>(
+    "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email, password, created_at",
+    [email, passwordHash]
+  );
+
+  if (!rows[0]) {
+    throw new Error("Failed to create user");
+  }
+
+  await neonQuery("INSERT INTO user_profiles (user_id, display_name) VALUES ($1, $2) ON CONFLICT (user_id) DO NOTHING", [
+    rows[0].id,
+    email,
+  ]);
+
+  return rows[0];
+}
+
+export async function getUserByEmail(email: string): Promise<AuthUser | null> {
+  if (!neonEnabled()) {
+    throw new Error("Neon database is required for user management");
+  }
+
+  await ensureNeonTable();
+  const rows = await neonQuery<AuthUser>(
+    "SELECT id, email, password, created_at FROM users WHERE email = $1 LIMIT 1",
+    [email]
+  );
+  return rows[0] ?? null;
+}
+
+export async function updateUserPassword(userId: number, passwordHash: string): Promise<void> {
+  if (!neonEnabled()) {
+    throw new Error("Neon database is required for user management");
+  }
+
+  await ensureNeonTable();
+  await neonQuery("UPDATE users SET password = $1 WHERE id = $2", [passwordHash, userId]);
+}
+
+export async function ensureUser(email: string, passwordHash: string): Promise<AuthUser> {
+  const existing = await getUserByEmail(email);
+  if (existing) return existing;
+  return createUser(email, passwordHash);
+}
+
+export async function listPersistedMatchesByUser(userId: number): Promise<PersistedMatch[]> {
+  if (neonEnabled()) {
+    await ensureNeonTable();
+    const rows = await neonQuery<{ payload?: PersistedMatch }>(
+      "SELECT payload FROM user_data WHERE user_id = $1 ORDER BY id DESC",
+      [userId]
+    );
+    return rows
+      .filter((r): r is { payload: PersistedMatch } => Boolean(r && r.payload))
+      .map((r) => normalizeMatch(r.payload));
+  }
+
+  return listPersistedMatches();
+}
+
+export async function savePersistedMatchesByUser(userId: number, matches: PersistedMatch[]): Promise<void> {
+  const normalized = matches.map(normalizeMatch);
+
+  if (neonEnabled()) {
+    await ensureNeonTable();
+    await neonQuery("BEGIN");
+    try {
+      await neonQuery("DELETE FROM user_data WHERE user_id = $1", [userId]);
+      for (const item of normalized) {
+        await neonQuery(
+          "INSERT INTO user_data (user_id, title, value, payload, created_at) VALUES ($1, $2, $3, $4::jsonb, NOW())",
+          [userId, item.opponent, item.goalsFor, JSON.stringify(item)]
+        );
+      }
+      await neonQuery("COMMIT");
+    } catch (error) {
+      await neonQuery("ROLLBACK");
+      throw error;
+    }
+    return;
+  }
+
+  await savePersistedMatches(matches);
 }
 
 export async function savePersistedMatches(matches: PersistedMatch[]): Promise<void> {
