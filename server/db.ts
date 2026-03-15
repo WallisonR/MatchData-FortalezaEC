@@ -1,6 +1,6 @@
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, clubs, matches, teamStats, kpiTargets, kpiValues, performanceGoals } from "../drizzle/schema";
+import { InsertUser, users, clubs, matches, teamStats, kpiTargets, kpiValues, performanceGoals, playerStats } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
