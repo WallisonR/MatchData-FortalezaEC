@@ -422,13 +422,13 @@ export default function Dashboard() {
     const wins = completedRounds.filter(value => value === 3).length;
     const playedMatches = completedRounds.length;
     const pct = playedMatches > 0 ? (points / (playedMatches * 3)) * 100 : null;
-    const g2Remaining = Math.max(
-      0,
-      ((OFFENSIVE_GOALS.g2Points - points) / OFFENSIVE_GOALS.g2Points) * 100
+    const g2Remaining = Math.min(
+      100,
+      (points / OFFENSIVE_GOALS.g2Points) * 100
     );
-    const g6Remaining = Math.max(
-      0,
-      ((OFFENSIVE_GOALS.g6Points - points) / OFFENSIVE_GOALS.g6Points) * 100
+    const g6Remaining = Math.min(
+      100,
+      (points / OFFENSIVE_GOALS.g6Points) * 100
     );
     return {
       points,

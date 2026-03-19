@@ -371,17 +371,13 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
       : offensivePct >= OFFENSIVE_GOALS.g6Pct
         ? "#dcfce7"
         : "#fef3c7";
-  const offensiveGoalsG2Remaining = Math.max(
-    0,
-    ((OFFENSIVE_GOALS.g2Points - offensiveGoalsSummary.points) /
-      OFFENSIVE_GOALS.g2Points) *
-      100
+  const offensiveGoalsG2Remaining = Math.min(
+    100,
+    (offensiveGoalsSummary.points / OFFENSIVE_GOALS.g2Points) * 100
   );
-  const offensiveGoalsG6Remaining = Math.max(
-    0,
-    ((OFFENSIVE_GOALS.g6Points - offensiveGoalsSummary.points) /
-      OFFENSIVE_GOALS.g6Points) *
-      100
+  const offensiveGoalsG6Remaining = Math.min(
+    100,
+    (offensiveGoalsSummary.points / OFFENSIVE_GOALS.g6Points) * 100
   );
   const defensiveKpis = KPI_DEFS.filter(k => k.group === "defensive");
   const generalKpis = KPI_DEFS.filter(k => k.group === "general");
