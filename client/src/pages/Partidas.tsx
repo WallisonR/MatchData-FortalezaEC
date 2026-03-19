@@ -33,8 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Trophy, Eye } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Edit, Trash2, Eye } from "lucide-react";
 
 interface Match {
   id: number;
@@ -61,6 +60,14 @@ interface Match {
   pct_cruzamentos_acerto_sofridos?: number;
   entradas_area_sofrida_90?: number;
   toques_area_sofridos_90?: number;
+  intensidade_jogo?: number;
+  duelos_ofensivos_pct?: number;
+  duelos_defensivos_pct?: number;
+  duelos_aereos_pct?: number;
+  recuperacoes_altas_medias?: number;
+  ppda?: number;
+  media_passes_jogo?: number;
+  acerto_passes_pct?: number;
   shots?: number;
   shotsOnTarget?: number;
   passes?: number;
@@ -95,6 +102,100 @@ const MOCK_MATCHES: Match[] = [];
 
 const MOCK_STATS: Record<number, MatchStats> = {};
 
+const createEmptyFormData = () => ({
+  date: "",
+  opponent: "",
+  competition: "",
+  result: "D",
+  goalsFor: "",
+  goalsAgainst: "",
+  possession: "",
+  xg: "",
+  pct_jogos_marcou: "",
+  finalizacoes: "",
+  pct_final_certa: "",
+  final_dentro: "",
+  pct_cruzamentos_acerto: "",
+  entradas_area_90: "",
+  toques_area_90: "",
+  xg_contra: "",
+  pct_nao_sofreu: "",
+  final_sofrida: "",
+  pct_final_certa_sofrida: "",
+  final_dentro_sofrida: "",
+  pct_cruzamentos_acerto_sofridos: "",
+  entradas_area_sofrida_90: "",
+  toques_area_sofridos_90: "",
+  intensidade_jogo: "",
+  duelos_ofensivos_pct: "",
+  duelos_defensivos_pct: "",
+  duelos_aereos_pct: "",
+  recuperacoes_altas_medias: "",
+  ppda: "",
+  media_passes_jogo: "",
+  acerto_passes_pct: "",
+  shots: "",
+  shotsOnTarget: "",
+  passes: "",
+  passAccuracy: "",
+  selectedRound: "new",
+});
+
+const parseOptionalNumber = (value: string) =>
+  value === "" ? undefined : Number(value);
+
+const buildMatchFromForm = (
+  id: number,
+  formData: ReturnType<typeof createEmptyFormData>
+): Match => ({
+  id,
+  date: formData.date,
+  opponent: formData.opponent,
+  competition: formData.competition,
+  result: formData.result as "W" | "D" | "L",
+  goalsFor: parseInt(formData.goalsFor) || 0,
+  goalsAgainst: parseInt(formData.goalsAgainst) || 0,
+  possession: parseOptionalNumber(formData.possession),
+  xg: parseOptionalNumber(formData.xg),
+  pct_jogos_marcou: parseOptionalNumber(formData.pct_jogos_marcou),
+  finalizacoes: parseOptionalNumber(formData.finalizacoes),
+  pct_final_certa: parseOptionalNumber(formData.pct_final_certa),
+  final_dentro: parseOptionalNumber(formData.final_dentro),
+  pct_cruzamentos_acerto: parseOptionalNumber(formData.pct_cruzamentos_acerto),
+  entradas_area_90: parseOptionalNumber(formData.entradas_area_90),
+  toques_area_90: parseOptionalNumber(formData.toques_area_90),
+  xg_contra: parseOptionalNumber(formData.xg_contra),
+  pct_nao_sofreu: parseOptionalNumber(formData.pct_nao_sofreu),
+  final_sofrida: parseOptionalNumber(formData.final_sofrida),
+  pct_final_certa_sofrida: parseOptionalNumber(
+    formData.pct_final_certa_sofrida
+  ),
+  final_dentro_sofrida: parseOptionalNumber(formData.final_dentro_sofrida),
+  pct_cruzamentos_acerto_sofridos: parseOptionalNumber(
+    formData.pct_cruzamentos_acerto_sofridos
+  ),
+  entradas_area_sofrida_90: parseOptionalNumber(
+    formData.entradas_area_sofrida_90
+  ),
+  toques_area_sofridos_90: parseOptionalNumber(
+    formData.toques_area_sofridos_90
+  ),
+  intensidade_jogo: parseOptionalNumber(formData.intensidade_jogo),
+  duelos_ofensivos_pct: parseOptionalNumber(formData.duelos_ofensivos_pct),
+  duelos_defensivos_pct: parseOptionalNumber(formData.duelos_defensivos_pct),
+  duelos_aereos_pct: parseOptionalNumber(formData.duelos_aereos_pct),
+  recuperacoes_altas_medias: parseOptionalNumber(
+    formData.recuperacoes_altas_medias
+  ),
+  ppda: parseOptionalNumber(formData.ppda),
+  media_passes_jogo: parseOptionalNumber(formData.media_passes_jogo),
+  acerto_passes_pct: parseOptionalNumber(formData.acerto_passes_pct),
+  shots: parseOptionalNumber(formData.shots),
+  shotsOnTarget: parseOptionalNumber(formData.shotsOnTarget),
+  passes: parseOptionalNumber(formData.passes),
+  passAccuracy: parseOptionalNumber(formData.passAccuracy),
+});
+
 function getResultBadge(result: string) {
   const colors = {
     W: "bg-green-100 text-green-800",
@@ -115,36 +216,7 @@ export default function Partidas() {
   const [statsOpen, setStatsOpen] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({
-    date: "",
-    opponent: "",
-    competition: "",
-    result: "D",
-    goalsFor: "",
-    goalsAgainst: "",
-    possession: "",
-    xg: "",
-    pct_jogos_marcou: "",
-    finalizacoes: "",
-    pct_final_certa: "",
-    final_dentro: "",
-    pct_cruzamentos_acerto: "",
-    entradas_area_90: "",
-    toques_area_90: "",
-    xg_contra: "",
-    pct_nao_sofreu: "",
-    final_sofrida: "",
-    pct_final_certa_sofrida: "",
-    final_dentro_sofrida: "",
-    pct_cruzamentos_acerto_sofridos: "",
-    entradas_area_sofrida_90: "",
-    toques_area_sofridos_90: "",
-    shots: "",
-    shotsOnTarget: "",
-    passes: "",
-    passAccuracy: "",
-    selectedRound: "new",
-  });
+  const [formData, setFormData] = useState(createEmptyFormData);
 
   const syncMatchesToServer = async (nextMatches: Match[]) => {
     await fetch("/api/matches/sync", {
@@ -211,34 +283,8 @@ export default function Partidas() {
   const handleAddClick = () => {
     setEditingId(null);
     setFormData({
+      ...createEmptyFormData(),
       date: new Date().toISOString().split("T")[0],
-      opponent: "",
-      competition: "",
-      result: "D",
-      goalsFor: "",
-      goalsAgainst: "",
-      possession: "",
-      xg: "",
-      pct_jogos_marcou: "",
-      finalizacoes: "",
-      pct_final_certa: "",
-      final_dentro: "",
-      pct_cruzamentos_acerto: "",
-      entradas_area_90: "",
-      toques_area_90: "",
-      xg_contra: "",
-      pct_nao_sofreu: "",
-      final_sofrida: "",
-      pct_final_certa_sofrida: "",
-      final_dentro_sofrida: "",
-      pct_cruzamentos_acerto_sofridos: "",
-      entradas_area_sofrida_90: "",
-      toques_area_sofridos_90: "",
-      shots: "",
-      shotsOnTarget: "",
-      passes: "",
-      passAccuracy: "",
-      selectedRound: "new",
     });
     setOpen(true);
   };
@@ -255,6 +301,7 @@ export default function Partidas() {
     } catch (e) {}
 
     setFormData({
+      ...createEmptyFormData(),
       date: match.date,
       opponent: match.opponent,
       competition: match.competition,
@@ -305,6 +352,27 @@ export default function Partidas() {
         match.toques_area_sofridos_90 == null
           ? ""
           : String(match.toques_area_sofridos_90),
+      intensidade_jogo:
+        match.intensidade_jogo == null ? "" : String(match.intensidade_jogo),
+      duelos_ofensivos_pct:
+        match.duelos_ofensivos_pct == null
+          ? ""
+          : String(match.duelos_ofensivos_pct),
+      duelos_defensivos_pct:
+        match.duelos_defensivos_pct == null
+          ? ""
+          : String(match.duelos_defensivos_pct),
+      duelos_aereos_pct:
+        match.duelos_aereos_pct == null ? "" : String(match.duelos_aereos_pct),
+      recuperacoes_altas_medias:
+        match.recuperacoes_altas_medias == null
+          ? ""
+          : String(match.recuperacoes_altas_medias),
+      ppda: match.ppda == null ? "" : String(match.ppda),
+      media_passes_jogo:
+        match.media_passes_jogo == null ? "" : String(match.media_passes_jogo),
+      acerto_passes_pct:
+        match.acerto_passes_pct == null ? "" : String(match.acerto_passes_pct),
       shots: match.shots == null ? "" : String(match.shots),
       shotsOnTarget:
         match.shotsOnTarget == null ? "" : String(match.shotsOnTarget),
@@ -323,110 +391,14 @@ export default function Partidas() {
 
     let toPersistMatches = matches;
     if (editingId) {
+      const updatedMatch = buildMatchFromForm(editingId, formData);
       const updatedMatches = matches.map(m =>
-        m.id === editingId
-          ? {
-              ...m,
-              date: formData.date,
-              opponent: formData.opponent,
-              competition: formData.competition,
-              result: formData.result as "W" | "D" | "L",
-              goalsFor: parseInt(formData.goalsFor),
-              goalsAgainst: parseInt(formData.goalsAgainst),
-              possession:
-                formData.possession === ""
-                  ? undefined
-                  : Number(formData.possession),
-            }
-          : m
+        m.id === editingId ? updatedMatch : m
       );
       setMatches(updatedMatches);
       toPersistMatches = updatedMatches;
       // sync updated match to dashboard using the form values
       try {
-        const updatedMatch: Match = {
-          id: editingId,
-          date: formData.date,
-          opponent: formData.opponent,
-          competition: formData.competition,
-          result: formData.result as "W" | "D" | "L",
-          goalsFor: parseInt(formData.goalsFor) || 0,
-          goalsAgainst: parseInt(formData.goalsAgainst) || 0,
-          possession:
-            formData.possession === ""
-              ? undefined
-              : Number(formData.possession),
-          xg: formData.xg === "" ? undefined : Number(formData.xg),
-          pct_jogos_marcou:
-            formData.pct_jogos_marcou === ""
-              ? undefined
-              : Number(formData.pct_jogos_marcou),
-          finalizacoes:
-            formData.finalizacoes === ""
-              ? undefined
-              : Number(formData.finalizacoes),
-          pct_final_certa:
-            formData.pct_final_certa === ""
-              ? undefined
-              : Number(formData.pct_final_certa),
-          final_dentro:
-            formData.final_dentro === ""
-              ? undefined
-              : Number(formData.final_dentro),
-          pct_cruzamentos_acerto:
-            formData.pct_cruzamentos_acerto === ""
-              ? undefined
-              : Number(formData.pct_cruzamentos_acerto),
-          entradas_area_90:
-            formData.entradas_area_90 === ""
-              ? undefined
-              : Number(formData.entradas_area_90),
-          toques_area_90:
-            formData.toques_area_90 === ""
-              ? undefined
-              : Number(formData.toques_area_90),
-          xg_contra:
-            formData.xg_contra === "" ? undefined : Number(formData.xg_contra),
-          pct_nao_sofreu:
-            formData.pct_nao_sofreu === ""
-              ? undefined
-              : Number(formData.pct_nao_sofreu),
-          final_sofrida:
-            formData.final_sofrida === ""
-              ? undefined
-              : Number(formData.final_sofrida),
-          pct_final_certa_sofrida:
-            formData.pct_final_certa_sofrida === ""
-              ? undefined
-              : Number(formData.pct_final_certa_sofrida),
-          final_dentro_sofrida:
-            formData.final_dentro_sofrida === ""
-              ? undefined
-              : Number(formData.final_dentro_sofrida),
-          pct_cruzamentos_acerto_sofridos:
-            formData.pct_cruzamentos_acerto_sofridos === ""
-              ? undefined
-              : Number(formData.pct_cruzamentos_acerto_sofridos),
-          entradas_area_sofrida_90:
-            formData.entradas_area_sofrida_90 === ""
-              ? undefined
-              : Number(formData.entradas_area_sofrida_90),
-          toques_area_sofridos_90:
-            formData.toques_area_sofridos_90 === ""
-              ? undefined
-              : Number(formData.toques_area_sofridos_90),
-          shots: formData.shots === "" ? undefined : Number(formData.shots),
-          shotsOnTarget:
-            formData.shotsOnTarget === ""
-              ? undefined
-              : Number(formData.shotsOnTarget),
-          passes: formData.passes === "" ? undefined : Number(formData.passes),
-          passAccuracy:
-            formData.passAccuracy === ""
-              ? undefined
-              : Number(formData.passAccuracy),
-        };
-
         const roundMapKey = getStorageKey(
           updatedMatch.competition,
           "match_round_map"
@@ -471,86 +443,10 @@ export default function Partidas() {
         // ignore
       }
     } else {
-      const newMatch: Match = {
-        id: Math.max(...matches.map(m => m.id), 0) + 1,
-        date: formData.date,
-        opponent: formData.opponent,
-        competition: formData.competition,
-        result: formData.result as "W" | "D" | "L",
-        goalsFor: parseInt(formData.goalsFor) || 0,
-        goalsAgainst: parseInt(formData.goalsAgainst) || 0,
-        possession:
-          formData.possession === "" ? undefined : Number(formData.possession),
-        xg: formData.xg === "" ? undefined : Number(formData.xg),
-        pct_jogos_marcou:
-          formData.pct_jogos_marcou === ""
-            ? undefined
-            : Number(formData.pct_jogos_marcou),
-        finalizacoes:
-          formData.finalizacoes === ""
-            ? undefined
-            : Number(formData.finalizacoes),
-        pct_final_certa:
-          formData.pct_final_certa === ""
-            ? undefined
-            : Number(formData.pct_final_certa),
-        final_dentro:
-          formData.final_dentro === ""
-            ? undefined
-            : Number(formData.final_dentro),
-        pct_cruzamentos_acerto:
-          formData.pct_cruzamentos_acerto === ""
-            ? undefined
-            : Number(formData.pct_cruzamentos_acerto),
-        entradas_area_90:
-          formData.entradas_area_90 === ""
-            ? undefined
-            : Number(formData.entradas_area_90),
-        toques_area_90:
-          formData.toques_area_90 === ""
-            ? undefined
-            : Number(formData.toques_area_90),
-        xg_contra:
-          formData.xg_contra === "" ? undefined : Number(formData.xg_contra),
-        pct_nao_sofreu:
-          formData.pct_nao_sofreu === ""
-            ? undefined
-            : Number(formData.pct_nao_sofreu),
-        final_sofrida:
-          formData.final_sofrida === ""
-            ? undefined
-            : Number(formData.final_sofrida),
-        pct_final_certa_sofrida:
-          formData.pct_final_certa_sofrida === ""
-            ? undefined
-            : Number(formData.pct_final_certa_sofrida),
-        final_dentro_sofrida:
-          formData.final_dentro_sofrida === ""
-            ? undefined
-            : Number(formData.final_dentro_sofrida),
-        pct_cruzamentos_acerto_sofridos:
-          formData.pct_cruzamentos_acerto_sofridos === ""
-            ? undefined
-            : Number(formData.pct_cruzamentos_acerto_sofridos),
-        entradas_area_sofrida_90:
-          formData.entradas_area_sofrida_90 === ""
-            ? undefined
-            : Number(formData.entradas_area_sofrida_90),
-        toques_area_sofridos_90:
-          formData.toques_area_sofridos_90 === ""
-            ? undefined
-            : Number(formData.toques_area_sofridos_90),
-        shots: formData.shots === "" ? undefined : Number(formData.shots),
-        shotsOnTarget:
-          formData.shotsOnTarget === ""
-            ? undefined
-            : Number(formData.shotsOnTarget),
-        passes: formData.passes === "" ? undefined : Number(formData.passes),
-        passAccuracy:
-          formData.passAccuracy === ""
-            ? undefined
-            : Number(formData.passAccuracy),
-      };
+      const newMatch = buildMatchFromForm(
+        Math.max(...matches.map(m => m.id), 0) + 1,
+        formData
+      );
       const newMatches = [...matches, newMatch].sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
       );
@@ -729,6 +625,15 @@ export default function Partidas() {
       );
       maybeSet("entradas_area_sofrida_90", m.entradas_area_sofrida_90);
       maybeSet("toques_area_sofridos_90", m.toques_area_sofridos_90);
+
+      maybeSet("intensidade_jogo", m.intensidade_jogo);
+      maybeSet("duelos_ofensivos_pct", m.duelos_ofensivos_pct);
+      maybeSet("duelos_defensivos_pct", m.duelos_defensivos_pct);
+      maybeSet("duelos_aereos_pct", m.duelos_aereos_pct);
+      maybeSet("recuperacoes_altas_medias", m.recuperacoes_altas_medias);
+      maybeSet("ppda", m.ppda);
+      maybeSet("media_passes_jogo", m.media_passes_jogo ?? m.passes);
+      maybeSet("acerto_passes_pct", m.acerto_passes_pct ?? m.passAccuracy);
 
       localStorage.setItem(valuesKey, JSON.stringify(values));
       window.dispatchEvent(new Event("kpi-updated"));
@@ -1200,6 +1105,138 @@ export default function Partidas() {
                         })
                       }
                       placeholder="12"
+                    />
+                  </div>
+                </div>
+
+                <div className="text-sm font-semibold text-gray-700 dark:text-white mb-2 mt-4">
+                  KPIs gerais
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div>
+                    <Label>Intensidade de Jogo</Label>
+                    <Input
+                      type="number"
+                      value={formData.intensidade_jogo}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          intensidade_jogo: e.target.value,
+                        })
+                      }
+                      placeholder="16"
+                      step="0.01"
+                    />
+                  </div>
+                  <div>
+                    <Label>% Duelos Ofensivos</Label>
+                    <Input
+                      type="number"
+                      value={formData.duelos_ofensivos_pct}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          duelos_ofensivos_pct: e.target.value,
+                        })
+                      }
+                      placeholder="41"
+                      step="0.01"
+                    />
+                  </div>
+                  <div>
+                    <Label>% Duelos Defensivos</Label>
+                    <Input
+                      type="number"
+                      value={formData.duelos_defensivos_pct}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          duelos_defensivos_pct: e.target.value,
+                        })
+                      }
+                      placeholder="61"
+                      step="0.01"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+                  <div>
+                    <Label>% Duelos Aéreos</Label>
+                    <Input
+                      type="number"
+                      value={formData.duelos_aereos_pct}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          duelos_aereos_pct: e.target.value,
+                        })
+                      }
+                      placeholder="47"
+                      step="0.01"
+                    />
+                  </div>
+                  <div>
+                    <Label>Recuperações Altas/Médias</Label>
+                    <Input
+                      type="number"
+                      value={formData.recuperacoes_altas_medias}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          recuperacoes_altas_medias: e.target.value,
+                        })
+                      }
+                      placeholder="44"
+                      step="0.01"
+                    />
+                  </div>
+                  <div>
+                    <Label>PPDA</Label>
+                    <Input
+                      type="number"
+                      value={formData.ppda}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          ppda: e.target.value,
+                        })
+                      }
+                      placeholder="9.88"
+                      step="0.01"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+                  <div>
+                    <Label>Média de Passes / jogo</Label>
+                    <Input
+                      type="number"
+                      value={formData.media_passes_jogo}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          media_passes_jogo: e.target.value,
+                        })
+                      }
+                      placeholder="395"
+                      step="0.01"
+                    />
+                  </div>
+                  <div>
+                    <Label>% Acerto de Passes (KPI)</Label>
+                    <Input
+                      type="number"
+                      value={formData.acerto_passes_pct}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          acerto_passes_pct: e.target.value,
+                        })
+                      }
+                      placeholder="83"
+                      step="0.01"
                     />
                   </div>
                 </div>
