@@ -422,10 +422,14 @@ export default function Dashboard() {
     const wins = completedRounds.filter(value => value === 3).length;
     const playedMatches = completedRounds.length;
     const pct = playedMatches > 0 ? (points / (playedMatches * 3)) * 100 : null;
-    const g2Remaining =
-      pct == null ? null : Math.max(0, OFFENSIVE_GOALS.g2Pct - pct);
-    const g6Remaining =
-      pct == null ? null : Math.max(0, OFFENSIVE_GOALS.g6Pct - pct);
+    const g2Remaining = Math.max(
+      0,
+      ((OFFENSIVE_GOALS.g2Points - points) / OFFENSIVE_GOALS.g2Points) * 100
+    );
+    const g6Remaining = Math.max(
+      0,
+      ((OFFENSIVE_GOALS.g6Points - points) / OFFENSIVE_GOALS.g6Points) * 100
+    );
     return {
       points,
       wins,
@@ -486,7 +490,7 @@ export default function Dashboard() {
 
   const getGoalRangeColor = (value: number | null) => {
     if (value == null) return "bg-transparent";
-    return value >= OFFENSIVE_GOALS.g6Pct && value <= OFFENSIVE_GOALS.g2Pct
+    return value >= OFFENSIVE_GOALS.g6Pct
       ? "bg-green-200 border-green-400 text-green-950 dark:text-green-950"
       : "bg-yellow-100 border-yellow-300 text-yellow-950 dark:text-yellow-950";
   };
