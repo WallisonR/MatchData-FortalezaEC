@@ -19,14 +19,6 @@ type KpiDef = {
 
 const KPI_DEFS: KpiDef[] = [
   {
-    id: "pontos",
-    name: "Pontos",
-    metaG2: 65,
-    metaG6: 61,
-    group: "offensive",
-    better: "higher",
-  },
-  {
     id: "media_gols",
     name: "Média de Gols",
     metaG2: 1.23,
@@ -253,6 +245,15 @@ const KPI_DEFS: KpiDef[] = [
   },
 ];
 
+const OFFENSIVE_GOALS = {
+  g2Points: 65,
+  g2Wins: 18,
+  g2Pct: 57,
+  g6Points: 61,
+  g6Wins: 17,
+  g6Pct: 53,
+} as const;
+
 const extractRoundNumber = (round: string) => {
   const match = round.match(/r(\d+)/i);
   return match?.[1] || round;
@@ -349,6 +350,35 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
   const currentRound = displayRounds[displayRounds.length - 1] ?? null;
 
   const offensiveKpis = KPI_DEFS.filter(k => k.group === "offensive");
+  const pointsByRound = values["pontos"] || {};
+  const completedRounds = displayRounds
+    .map(round => pointsByRound[round])
+    .filter((value): value is number => value != null);
+  const offensiveGoalsSummary = {
+    points: completedRounds.reduce((total, value) => total + value, 0),
+    wins: completedRounds.filter(value => value === 3).length,
+    playedMatches: completedRounds.length,
+  };
+  const offensivePct =
+    offensiveGoalsSummary.playedMatches > 0
+      ? (offensiveGoalsSummary.points /
+          (offensiveGoalsSummary.playedMatches * 3)) *
+        100
+      : null;
+  const offensiveGoalsRangeColor =
+    offensivePct == null
+      ? "#ffffff"
+      : offensivePct >= OFFENSIVE_GOALS.g6Pct
+        ? "#dcfce7"
+        : "#fef3c7";
+  const offensiveGoalsG2Remaining = Math.min(
+    100,
+    (offensiveGoalsSummary.points / OFFENSIVE_GOALS.g2Points) * 100
+  );
+  const offensiveGoalsG6Remaining = Math.min(
+    100,
+    (offensiveGoalsSummary.points / OFFENSIVE_GOALS.g6Points) * 100
+  );
   const defensiveKpis = KPI_DEFS.filter(k => k.group === "defensive");
   const generalKpis = KPI_DEFS.filter(k => k.group === "general");
 
@@ -364,6 +394,11 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
   const getRoundValue = (kpiId: string) => {
     if (!currentRound) return null;
     return values[kpiId]?.[currentRound] ?? null;
+  };
+
+  const formatGoalPct = (val: number | null) => {
+    if (val === null) return "-";
+    return `${Number(val.toFixed(1))}%`;
   };
 
   const formatValue = (val: number | null, metricName?: string) => {
@@ -413,7 +448,9 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
     const cols = generalKpis
       .map(kpi => {
         const value = getter(kpi);
-        const background = withGoalColor ? ` style="background:${getCellColor(kpi, value)}"` : "";
+        const background = withGoalColor
+          ? ` style="background:${getCellColor(kpi, value)}"`
+          : "";
 
         return `<td class="value-cell"${background}>${formatValue(value, kpi.name)}</td>`;
       })
@@ -436,6 +473,50 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
       true
     ),
   ].join("");
+
+  const offensiveGoalsTable = `
+    <div class="table-wrap" style="margin-bottom: 10px;">
+      <div class="table-title">Metas ofensivas de pontuação</div>
+      <table>
+        <thead>
+          <tr>
+            <th class="metric-head">Equipe</th>
+            <th>Pontos</th>
+            <th>Vitórias</th>
+            <th>% Aproveitamento</th>
+            <th>G2% p/atingir meta</th>
+            <th>G6% p/atingir meta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="metric-cell">FEC</td>
+            <td class="meta-cell">${offensiveGoalsSummary.points}</td>
+            <td class="meta-cell">${offensiveGoalsSummary.wins}</td>
+            <td class="value-cell" style="background:${offensiveGoalsRangeColor}; font-weight:700;">${formatGoalPct(offensivePct)}</td>
+            <td class="value-cell" style="background:${offensiveGoalsRangeColor}; font-weight:700;">${formatGoalPct(offensiveGoalsG2Remaining)}</td>
+            <td class="value-cell" style="background:${offensiveGoalsRangeColor}; font-weight:700;">${formatGoalPct(offensiveGoalsG6Remaining)}</td>
+          </tr>
+          <tr>
+            <td class="metric-cell">G2</td>
+            <td class="meta-cell">${OFFENSIVE_GOALS.g2Points}</td>
+            <td class="meta-cell">${OFFENSIVE_GOALS.g2Wins}</td>
+            <td class="meta-cell">${OFFENSIVE_GOALS.g2Pct}%</td>
+            <td class="value-cell">-</td>
+            <td class="value-cell">-</td>
+          </tr>
+          <tr>
+            <td class="metric-cell">G6</td>
+            <td class="meta-cell">${OFFENSIVE_GOALS.g6Points}</td>
+            <td class="meta-cell">${OFFENSIVE_GOALS.g6Wins}</td>
+            <td class="meta-cell">${OFFENSIVE_GOALS.g6Pct}%</td>
+            <td class="value-cell">-</td>
+            <td class="value-cell">-</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  `;
 
   const legend = `
     <div class="legend">
@@ -551,6 +632,7 @@ function getReportHTML(data: ReportData, roundDescription: string): string {
           </div>
         </div>
 
+        ${offensiveGoalsTable}
         <div class="round-description">${roundDescription}</div>
         ${legend}
 
