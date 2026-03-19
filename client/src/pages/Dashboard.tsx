@@ -737,41 +737,61 @@ export default function Dashboard() {
                       <TableCell className="text-center font-semibold">
                         {k.metaG6}
                       </TableCell>
-                      {rounds.map(c => (
-                        <TableCell key={c} className="text-center p-1">
-                          <div className="relative flex justify-center">
-                            <input
-                              inputMode="numeric"
-                              value={
-                                c === "fec_media"
-                                  ? (kpiAverage(k.id) ?? "")
-                                  : (values[k.id]?.[c] ?? "")
-                              }
-                              onChange={e => {
-                                if (c === "fec_media") return;
-                                setCell(
-                                  k.id,
-                                  c,
-                                  e.target.value === ""
-                                    ? null
-                                    : Number(e.target.value)
-                                );
-                              }}
-                              className={`w-24 h-8 px-2 pr-6 text-right border rounded focus:outline-none focus:ring-2 focus:ring-input placeholder:text-slate-500 ${getStatusColor(c === "fec_media" ? kpiAverage(k.id) : (values[k.id]?.[c] ?? null), k.metaG2, k.metaG6, k.better)} ${c === "fec_media" ? "bg-slate-50 dark:bg-slate-800 dark:text-white" : ""}`}
-                              placeholder="-"
-                              step={isPercent ? "0.1" : "0.01"}
-                              type="number"
-                              readOnly={c === "fec_media"}
-                            />
+                      {rounds.map(c => {
+                        const cellValue =
+                          c === "fec_media"
+                            ? kpiAverage(k.id)
+                            : (values[k.id]?.[c] ?? null);
+                        const statusClass = getStatusColor(
+                          cellValue,
+                          k.metaG2,
+                          k.metaG6,
+                          k.better
+                        );
+                        const isAverageColumn = c === "fec_media";
+                        const inputClass = isAverageColumn
+                          ? "bg-slate-50 text-slate-900 dark:bg-slate-800 dark:!text-white"
+                          : statusClass;
+                        const suffixClass = isAverageColumn
+                          ? "text-slate-900 dark:text-white"
+                          : cellValue == null
+                            ? "text-slate-500 dark:text-slate-300"
+                            : "text-slate-900";
 
-                            {isPercent && (
-                              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-current">
-                                %
-                              </span>
-                            )}
-                          </div>
-                        </TableCell>
-                      ))}
+                        return (
+                          <TableCell key={c} className="text-center p-1">
+                            <div className="relative mx-auto w-28 max-w-full">
+                              <input
+                                inputMode="numeric"
+                                value={cellValue ?? ""}
+                                onChange={e => {
+                                  if (isAverageColumn) return;
+                                  setCell(
+                                    k.id,
+                                    c,
+                                    e.target.value === ""
+                                      ? null
+                                      : Number(e.target.value)
+                                  );
+                                }}
+                                className={`h-8 w-full rounded border px-2 ${isPercent ? "pr-7" : "pr-2"} text-right focus:outline-none focus:ring-2 focus:ring-input placeholder:text-slate-500 ${inputClass}`}
+                                placeholder="-"
+                                step={isPercent ? "0.1" : "0.01"}
+                                type="number"
+                                readOnly={isAverageColumn}
+                              />
+
+                              {isPercent && (
+                                <span
+                                  className={`pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-sm font-medium ${suffixClass}`}
+                                >
+                                  %
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                        );
+                      })}
                       <TableCell className="text-center font-semibold">
                         {avg == null ? "-" : Number(avg.toFixed(2))}
                       </TableCell>
