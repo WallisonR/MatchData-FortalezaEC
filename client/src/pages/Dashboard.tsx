@@ -38,14 +38,6 @@ type KpiDef = {
 
 const KPI_DEFS: KpiDef[] = [
   {
-    id: "pontos",
-    name: "Pontos",
-    metaG2: 65,
-    metaG6: 61,
-    group: "offensive",
-    better: "higher",
-  },
-  {
     id: "media_gols",
     name: "Média de Gols",
     metaG2: 1.23,
@@ -274,6 +266,15 @@ const KPI_DEFS: KpiDef[] = [
 
 type RoundKey = string;
 
+const OFFENSIVE_GOALS = {
+  g2Points: 65,
+  g2Wins: 18,
+  g2Pct: 57,
+  g6Points: 61,
+  g6Wins: 17,
+  g6Pct: 53,
+} as const;
+
 const readJsonStorage = <T,>(key: string, fallback: T): T => {
   try {
     const stored = localStorage.getItem(key);
@@ -410,6 +411,30 @@ export default function Dashboard() {
 
   const exportRounds = rounds.filter(r => r !== "fec_media");
 
+  const offensiveGoalsSummary = useMemo(() => {
+    const pointsByRound = values["pontos"] || {};
+    const completedRounds = rounds
+      .filter(round => round !== "fec_media")
+      .map(round => pointsByRound[round])
+      .filter((value): value is number => value != null);
+
+    const points = completedRounds.reduce((total, value) => total + value, 0);
+    const wins = completedRounds.filter(value => value === 3).length;
+    const playedMatches = completedRounds.length;
+    const pct = playedMatches > 0 ? (points / (playedMatches * 3)) * 100 : null;
+    const g2Remaining =
+      pct == null ? null : Math.max(0, OFFENSIVE_GOALS.g2Pct - pct);
+    const g6Remaining =
+      pct == null ? null : Math.max(0, OFFENSIVE_GOALS.g6Pct - pct);
+    return {
+      points,
+      wins,
+      pct,
+      g2Remaining,
+      g6Remaining,
+    };
+  }, [rounds, values]);
+
   const handleExportReport = async () => {
     try {
       const roundsToExport =
@@ -454,6 +479,18 @@ export default function Dashboard() {
     return "bg-yellow-100 border-yellow-300 text-yellow-950 dark:text-yellow-950";
   };
 
+  const formatGoalPct = (value: number | null) => {
+    if (value == null) return "-";
+    return `${Number(value.toFixed(1))}%`;
+  };
+
+  const getGoalRangeColor = (value: number | null) => {
+    if (value == null) return "bg-transparent";
+    return value >= OFFENSIVE_GOALS.g6Pct && value <= OFFENSIVE_GOALS.g2Pct
+      ? "bg-green-200 border-green-400 text-green-950 dark:text-green-950"
+      : "bg-yellow-100 border-yellow-300 text-yellow-950 dark:text-yellow-950";
+  };
+
   const getRoundLabel = (roundKey: RoundKey) => {
     if (roundKey === "fec_media") return "FEC MÉDIA";
     const numberPart = roundKey.replace(/^r/i, "");
@@ -492,7 +529,9 @@ export default function Dashboard() {
           {selectedCompetition === "Brasileirão" && (
             <div className="flex flex-wrap items-end gap-2">
               <div className="w-48 space-y-1">
-                <Label className="dark:text-white">Rodada para exportação</Label>
+                <Label className="dark:text-white">
+                  Rodada para exportação
+                </Label>
                 <Select
                   value={selectedExportRound}
                   onValueChange={setSelectedExportRound}
@@ -521,12 +560,112 @@ export default function Dashboard() {
             </div>
           )}
 
-          <Button onClick={addRound} variant="outline" className="h-9 gap-2 dark:text-white">
+          <Button
+            onClick={addRound}
+            variant="outline"
+            className="h-9 gap-2 dark:text-white"
+          >
             <PlusCircle className="w-4 h-4" />
             Adicionar Rodada
           </Button>
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Metas ofensivas de pontuação</CardTitle>
+          <CardDescription>
+            Acompanhamento dinâmico do aproveitamento para atingir as metas G2 e
+            G6.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-0 overflow-x-auto">
+          <Table>
+            <TableHeader className="bg-gray-50 dark:bg-white/5">
+              <TableRow>
+                <TableHead>Equipe</TableHead>
+                <TableHead className="text-center">Pontos</TableHead>
+                <TableHead className="text-center">Vitórias</TableHead>
+                <TableHead className="text-center">% Aproveitamento</TableHead>
+                <TableHead className="text-center">
+                  G2% p/atingir meta
+                </TableHead>
+                <TableHead className="text-center">
+                  G6% p/atingir meta
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow className="hover:bg-gray-50 dark:hover:bg-white/5">
+                <TableCell className="font-medium">FEC</TableCell>
+                <TableCell className="text-center font-semibold">
+                  {offensiveGoalsSummary.points}
+                </TableCell>
+                <TableCell className="text-center font-semibold">
+                  {offensiveGoalsSummary.wins}
+                </TableCell>
+                <TableCell className="text-center p-1">
+                  <div
+                    className={`mx-auto w-full max-w-28 rounded border px-2 py-1 text-sm font-semibold ${getGoalRangeColor(offensiveGoalsSummary.pct)}`}
+                  >
+                    {formatGoalPct(offensiveGoalsSummary.pct)}
+                  </div>
+                </TableCell>
+                <TableCell className="text-center p-1">
+                  <div
+                    className={`mx-auto w-full max-w-28 rounded border px-2 py-1 text-sm font-semibold ${getGoalRangeColor(offensiveGoalsSummary.pct)}`}
+                  >
+                    {formatGoalPct(offensiveGoalsSummary.g2Remaining)}
+                  </div>
+                </TableCell>
+                <TableCell className="text-center p-1">
+                  <div
+                    className={`mx-auto w-full max-w-28 rounded border px-2 py-1 text-sm font-semibold ${getGoalRangeColor(offensiveGoalsSummary.pct)}`}
+                  >
+                    {formatGoalPct(offensiveGoalsSummary.g6Remaining)}
+                  </div>
+                </TableCell>
+              </TableRow>
+              <TableRow className="hover:bg-gray-50 dark:hover:bg-white/5">
+                <TableCell className="font-medium">G2</TableCell>
+                <TableCell className="text-center font-semibold">
+                  {OFFENSIVE_GOALS.g2Points}
+                </TableCell>
+                <TableCell className="text-center font-semibold">
+                  {OFFENSIVE_GOALS.g2Wins}
+                </TableCell>
+                <TableCell className="text-center font-semibold">
+                  {OFFENSIVE_GOALS.g2Pct}%
+                </TableCell>
+                <TableCell className="text-center text-muted-foreground">
+                  -
+                </TableCell>
+                <TableCell className="text-center text-muted-foreground">
+                  -
+                </TableCell>
+              </TableRow>
+              <TableRow className="hover:bg-gray-50 dark:hover:bg-white/5">
+                <TableCell className="font-medium">G6</TableCell>
+                <TableCell className="text-center font-semibold">
+                  {OFFENSIVE_GOALS.g6Points}
+                </TableCell>
+                <TableCell className="text-center font-semibold">
+                  {OFFENSIVE_GOALS.g6Wins}
+                </TableCell>
+                <TableCell className="text-center font-semibold">
+                  {OFFENSIVE_GOALS.g6Pct}%
+                </TableCell>
+                <TableCell className="text-center text-muted-foreground">
+                  -
+                </TableCell>
+                <TableCell className="text-center text-muted-foreground">
+                  -
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       {[
         { title: "KPIs Ofensivos", data: groups.offensive },
@@ -583,7 +722,10 @@ export default function Dashboard() {
                       : false;
                   const isPercent = /%|posse|pct/.test(k.name.toLowerCase());
                   return (
-                    <TableRow key={k.id} className="hover:bg-gray-50 dark:hover:bg-white/5">
+                    <TableRow
+                      key={k.id}
+                      className="hover:bg-gray-50 dark:hover:bg-white/5"
+                    >
                       <TableCell className="font-medium">{k.name}</TableCell>
                       <TableCell className="text-center font-semibold">
                         {k.metaG2}
