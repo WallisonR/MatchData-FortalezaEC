@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { resolvePctJogosMarcou, resolvePctNaoSofreu } from "@/lib/matchKpis";
 import { Plus, Edit, Trash2, Eye } from "lucide-react";
 
 interface Match {
@@ -147,54 +148,69 @@ const parseOptionalNumber = (value: string) =>
 const buildMatchFromForm = (
   id: number,
   formData: ReturnType<typeof createEmptyFormData>
-): Match => ({
-  id,
-  date: formData.date,
-  opponent: formData.opponent,
-  competition: formData.competition,
-  result: formData.result as "W" | "D" | "L",
-  goalsFor: parseInt(formData.goalsFor) || 0,
-  goalsAgainst: parseInt(formData.goalsAgainst) || 0,
-  possession: parseOptionalNumber(formData.possession),
-  xg: parseOptionalNumber(formData.xg),
-  pct_jogos_marcou: parseOptionalNumber(formData.pct_jogos_marcou),
-  finalizacoes: parseOptionalNumber(formData.finalizacoes),
-  pct_final_certa: parseOptionalNumber(formData.pct_final_certa),
-  final_dentro: parseOptionalNumber(formData.final_dentro),
-  pct_cruzamentos_acerto: parseOptionalNumber(formData.pct_cruzamentos_acerto),
-  entradas_area_90: parseOptionalNumber(formData.entradas_area_90),
-  toques_area_90: parseOptionalNumber(formData.toques_area_90),
-  xg_contra: parseOptionalNumber(formData.xg_contra),
-  pct_nao_sofreu: parseOptionalNumber(formData.pct_nao_sofreu),
-  final_sofrida: parseOptionalNumber(formData.final_sofrida),
-  pct_final_certa_sofrida: parseOptionalNumber(
-    formData.pct_final_certa_sofrida
-  ),
-  final_dentro_sofrida: parseOptionalNumber(formData.final_dentro_sofrida),
-  pct_cruzamentos_acerto_sofridos: parseOptionalNumber(
-    formData.pct_cruzamentos_acerto_sofridos
-  ),
-  entradas_area_sofrida_90: parseOptionalNumber(
-    formData.entradas_area_sofrida_90
-  ),
-  toques_area_sofridos_90: parseOptionalNumber(
-    formData.toques_area_sofridos_90
-  ),
-  intensidade_jogo: parseOptionalNumber(formData.intensidade_jogo),
-  duelos_ofensivos_pct: parseOptionalNumber(formData.duelos_ofensivos_pct),
-  duelos_defensivos_pct: parseOptionalNumber(formData.duelos_defensivos_pct),
-  duelos_aereos_pct: parseOptionalNumber(formData.duelos_aereos_pct),
-  recuperacoes_altas_medias: parseOptionalNumber(
-    formData.recuperacoes_altas_medias
-  ),
-  ppda: parseOptionalNumber(formData.ppda),
-  media_passes_jogo: parseOptionalNumber(formData.media_passes_jogo),
-  acerto_passes_pct: parseOptionalNumber(formData.acerto_passes_pct),
-  shots: parseOptionalNumber(formData.shots),
-  shotsOnTarget: parseOptionalNumber(formData.shotsOnTarget),
-  passes: parseOptionalNumber(formData.passes),
-  passAccuracy: parseOptionalNumber(formData.passAccuracy),
-});
+): Match => {
+  const goalsFor = parseInt(formData.goalsFor) || 0;
+  const goalsAgainst = parseInt(formData.goalsAgainst) || 0;
+  const pctJogosMarcou = resolvePctJogosMarcou(
+    goalsFor,
+    parseOptionalNumber(formData.pct_jogos_marcou)
+  );
+  const pctNaoSofreu = resolvePctNaoSofreu(
+    goalsAgainst,
+    parseOptionalNumber(formData.pct_nao_sofreu)
+  );
+
+  return {
+    id,
+    date: formData.date,
+    opponent: formData.opponent,
+    competition: formData.competition,
+    result: formData.result as "W" | "D" | "L",
+    goalsFor,
+    goalsAgainst,
+    possession: parseOptionalNumber(formData.possession),
+    xg: parseOptionalNumber(formData.xg),
+    pct_jogos_marcou: pctJogosMarcou,
+    finalizacoes: parseOptionalNumber(formData.finalizacoes),
+    pct_final_certa: parseOptionalNumber(formData.pct_final_certa),
+    final_dentro: parseOptionalNumber(formData.final_dentro),
+    pct_cruzamentos_acerto: parseOptionalNumber(
+      formData.pct_cruzamentos_acerto
+    ),
+    entradas_area_90: parseOptionalNumber(formData.entradas_area_90),
+    toques_area_90: parseOptionalNumber(formData.toques_area_90),
+    xg_contra: parseOptionalNumber(formData.xg_contra),
+    pct_nao_sofreu: pctNaoSofreu,
+    final_sofrida: parseOptionalNumber(formData.final_sofrida),
+    pct_final_certa_sofrida: parseOptionalNumber(
+      formData.pct_final_certa_sofrida
+    ),
+    final_dentro_sofrida: parseOptionalNumber(formData.final_dentro_sofrida),
+    pct_cruzamentos_acerto_sofridos: parseOptionalNumber(
+      formData.pct_cruzamentos_acerto_sofridos
+    ),
+    entradas_area_sofrida_90: parseOptionalNumber(
+      formData.entradas_area_sofrida_90
+    ),
+    toques_area_sofridos_90: parseOptionalNumber(
+      formData.toques_area_sofridos_90
+    ),
+    intensidade_jogo: parseOptionalNumber(formData.intensidade_jogo),
+    duelos_ofensivos_pct: parseOptionalNumber(formData.duelos_ofensivos_pct),
+    duelos_defensivos_pct: parseOptionalNumber(formData.duelos_defensivos_pct),
+    duelos_aereos_pct: parseOptionalNumber(formData.duelos_aereos_pct),
+    recuperacoes_altas_medias: parseOptionalNumber(
+      formData.recuperacoes_altas_medias
+    ),
+    ppda: parseOptionalNumber(formData.ppda),
+    media_passes_jogo: parseOptionalNumber(formData.media_passes_jogo),
+    acerto_passes_pct: parseOptionalNumber(formData.acerto_passes_pct),
+    shots: parseOptionalNumber(formData.shots),
+    shotsOnTarget: parseOptionalNumber(formData.shotsOnTarget),
+    passes: parseOptionalNumber(formData.passes),
+    passAccuracy: parseOptionalNumber(formData.passAccuracy),
+  };
+};
 
 function getResultBadge(result: string) {
   const colors = {
@@ -606,7 +622,10 @@ export default function Partidas() {
       };
 
       maybeSet("xg", m.xg);
-      maybeSet("pct_jogos_marcou", m.pct_jogos_marcou);
+      maybeSet(
+        "pct_jogos_marcou",
+        resolvePctJogosMarcou(m.goalsFor, m.pct_jogos_marcou)
+      );
       maybeSet("finalizacoes", m.finalizacoes);
       maybeSet("pct_final_certa", m.pct_final_certa);
       maybeSet("final_dentro", m.final_dentro);
@@ -615,7 +634,10 @@ export default function Partidas() {
       maybeSet("toques_area_90", m.toques_area_90);
 
       maybeSet("xg_contra", m.xg_contra);
-      maybeSet("pct_nao_sofreu", m.pct_nao_sofreu);
+      maybeSet(
+        "pct_nao_sofreu",
+        resolvePctNaoSofreu(m.goalsAgainst, m.pct_nao_sofreu)
+      );
       maybeSet("final_sofrida", m.final_sofrida);
       maybeSet("pct_final_certa_sofrida", m.pct_final_certa_sofrida);
       maybeSet("final_dentro_sofrida", m.final_dentro_sofrida);
