@@ -225,7 +225,7 @@ const KPI_DEFS: KpiDef[] = [
     metaG2: 10,
     metaG6: 10,
     group: "general",
-    better: "higher",
+    better: "lower",
   },
   {
     id: "media_passes_jogo",
